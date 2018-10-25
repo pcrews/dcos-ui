@@ -20,6 +20,11 @@ import SidebarStore from "../stores/SidebarStore";
 import UserLanguageStore from "../stores/UserLanguageStore";
 import { hasViewportChanged, getCurrentViewport } from "../utils/ViewportUtil";
 import * as viewport from "../constants/Viewports";
+import {
+  compare,
+  getVersionFromVersionObject,
+  showNotification
+} from "../core/UpdateStream";
 
 function getSidebarState() {
   return {
@@ -72,6 +77,9 @@ var Index = React.createClass({
 
     ConfigStore.fetchCCID();
     ConfigStore.addChangeListener(EventTypes.CONFIG_ERROR, this.onConfigError);
+    compare.subscribe(values => {
+      showNotification(getVersionFromVersionObject(values[1]));
+    });
   },
 
   shouldComponentUpdate(nextProps, nextState) {

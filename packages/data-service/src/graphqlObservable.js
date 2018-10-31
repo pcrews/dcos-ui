@@ -55,13 +55,15 @@ function resolveOperation(types, definition, context) {
     translateOperation[definition.operation]
   ].getFields();
 
-  return resolveResult(null, nextTypeMap, definition, context);
+  // TODO: separate current types and all types
+  return resolveResult(null, { ...types, ...nextTypeMap }, definition, context);
 }
 
 function resolveNode(types, definition, context, parent) {
   const args = buildResolveArgs(definition, context);
   const resolver = types[definition.name.value];
 
+  console.log({ resolver, types, definition });
   if (!resolver) {
     return throwObservable(`missing resolver for ${definition.name.value}`);
   }
@@ -81,16 +83,31 @@ function resolveNode(types, definition, context, parent) {
     return throwObservable("resolver does not return an observable");
   }
 
+  const resolvedType = resolver.type.ofType.name
+    ? resolver.type.ofType.name
+    : resolver.type.ofType.ofType.name;
+
+  console.count(resolvedType);
+  const whatever = types[resolvedType]._fields;
+  // TODO: this puts type into our main type map that are field resolvers, we should have another list for them
+  const newTypes = { ...types, ...whatever };
+
   return resolvedObservable.concatMap(emitted => {
+    // TODO: change these types to resemble
+    // See: https://facebook.github.io/graphql/June2018/#ResolveFieldValue()
+    // ResolveFieldValue(objectValue, argumentValues)
+    // objectValue: whatever the endpoint gives you
+    // argumentValues: unclear in the spec, would assume it's the last args given to the system
+    const resolverArgs = [emitted, newTypes, definition, context, resolver];
     if (!emitted) {
       return throwObservable("resolver emitted empty value");
     }
 
     if (emitted instanceof Array) {
-      return resolveArrayResults(emitted, types, definition, context, resolver);
+      return resolveArrayResults(...resolverArgs);
     }
 
-    return resolveResult(emitted, types, definition, context, resolver);
+    return resolveResult(...resolverArgs);
   });
 }
 
@@ -133,6 +150,9 @@ function buildResolveArgs(definition, context) {
 }
 
 function refineTypes(resolver, parent, types) {
+  console.log("RefineTypes");
+  console.log({ resolver, parent, types });
+
   return resolver && resolver.type.resolveType
     ? resolver.type.resolveType(parent).getFields()
     : types;

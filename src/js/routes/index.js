@@ -14,6 +14,7 @@ import services from "../../../plugins/services/src/js/routes/services";
 import settings from "./settings";
 import systemOverview from "./system-overview";
 import catalog from "./catalog";
+import development from "./development";
 
 // Modules that produce routes
 const routeFactories = [Organization, Network];
@@ -33,7 +34,8 @@ function getApplicationRoutes() {
     catalog,
     systemOverview,
     components,
-    settings
+    settings,
+    development // TODO: add this in a modular way
     // Plugins routes will be appended to this array
   );
 

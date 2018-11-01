@@ -17,9 +17,15 @@ export function graphqlObservable(doc, schema, context) {
     return throwObservable("document root must have a single definition");
   }
 
-  return resolve(schema._typeMap, doc.definitions[0], context, null).map(
-    data => ({ data })
-  );
+  try {
+    return resolve(schema._typeMap, doc.definitions[0], context, null).map(
+      data => ({ data })
+    );
+  } catch (e) {
+    console.log(e);
+
+    return Observable.throw(e);
+  }
 }
 
 function throwObservable(error) {
@@ -56,24 +62,25 @@ function resolveOperation(types, definition, context) {
   ].getFields();
 
   // TODO: separate current types and all types
-  return resolveResult(null, { ...types, ...nextTypeMap }, definition, context);
+  const resolver = nextTypeMap[definition.name.value];
+
+  return resolveResult(
+    null,
+    definition,
+    context,
+    refineTypes(resolver, null, nextTypeMap)
+  );
 }
 
 function resolveNode(types, definition, context, parent) {
   const args = buildResolveArgs(definition, context);
   const resolver = types[definition.name.value];
 
-  console.log({ resolver, types, definition });
   if (!resolver) {
     return throwObservable(`missing resolver for ${definition.name.value}`);
   }
 
-  const resolvedObservable = resolver.resolve(
-    parent,
-    args,
-    context,
-    null // that would be the info
-  );
+  const resolvedObservable = resolver.resolve(parent, args);
 
   if (!resolvedObservable) {
     return throwObservable("resolver returns empty value");
@@ -83,12 +90,7 @@ function resolveNode(types, definition, context, parent) {
     return throwObservable("resolver does not return an observable");
   }
 
-  const resolvedType = resolver.type.ofType.name
-    ? resolver.type.ofType.name
-    : resolver.type.ofType.ofType.name;
-
-  console.count(resolvedType);
-  const whatever = types[resolvedType]._fields;
+  const whatever = getFieldsFromResolvedType(types, resolver);
   // TODO: this puts type into our main type map that are field resolvers, we should have another list for them
   const newTypes = { ...types, ...whatever };
 
@@ -98,7 +100,10 @@ function resolveNode(types, definition, context, parent) {
     // ResolveFieldValue(objectValue, argumentValues)
     // objectValue: whatever the endpoint gives you
     // argumentValues: unclear in the spec, would assume it's the last args given to the system
-    const resolverArgs = [emitted, newTypes, definition, context, resolver];
+    const resolverArgs = [
+      sel => resolve(newTypes, sel, context, emitted),
+      definition
+    ];
     if (!emitted) {
       return throwObservable("resolver emitted empty value");
     }
@@ -115,24 +120,20 @@ function resolveLeaf(types, definition, context, parent) {
   return Observable.of(parent[definition.name.value]);
 }
 
-function resolveResult(parent, types, definition, context, resolver) {
+function resolveResult(resolveThunk, definition) {
   return definition.selectionSet.selections.reduce((acc, sel) => {
-    const refinedTypes = refineTypes(resolver, parent, types);
-    const result = resolve(refinedTypes, sel, context, parent);
     const fieldName = (sel.alias || sel.name).value;
 
-    return acc.combineLatest(result, objectAppendWithKey(fieldName));
+    return acc.combineLatest(resolveThunk(sel), objectAppendWithKey(fieldName));
   }, Observable.of({}));
 }
 
 function resolveArrayResults(parents, types, definition, context, resolver) {
   return parents.reduce((acc, result) => {
     const resultObserver = resolveResult(
-      result,
-      types,
-      definition,
-      context,
-      resolver
+      sel =>
+        resolve(refineTypes(resolver, result, types), sel, context, result),
+      definition
     );
 
     return acc.combineLatest(resultObserver, listAppend);
@@ -149,10 +150,19 @@ function buildResolveArgs(definition, context) {
     .reduce(Object.assign, {});
 }
 
-function refineTypes(resolver, parent, types) {
-  console.log("RefineTypes");
-  console.log({ resolver, parent, types });
+function getFieldsFromResolvedType(types, resolver) {
+  if (!resolver.type.ofType) {
+    return {};
+  }
 
+  const typeName = resolver.type.ofType.name
+    ? resolver.type.ofType.name
+    : resolver.type.ofType.ofType.name;
+
+  return types[typeName] ? types[typeName]._fields : {};
+}
+
+function refineTypes(resolver, parent, types) {
   return resolver && resolver.type.resolveType
     ? resolver.type.resolveType(parent).getFields()
     : types;

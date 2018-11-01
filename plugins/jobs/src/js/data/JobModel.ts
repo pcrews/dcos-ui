@@ -161,10 +161,13 @@ export const resolvers = ({
       }
     },
     JobConnection: {
-      nodes(...args) {
-        console.log("HIT", ...args);
+      nodes(job, args) {
+        console.log("HIT", job, args);
 
         return Observable.of([]);
+      },
+      filteredCount() {
+        return Observable.of(42);
       }
     }
     // JobConnection: {

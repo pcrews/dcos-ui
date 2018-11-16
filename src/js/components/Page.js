@@ -9,7 +9,18 @@ import FluidGeminiScrollbar from "./FluidGeminiScrollbar";
 import InternalStorageMixin from "../mixins/InternalStorageMixin";
 import ScrollbarUtil from "../utils/ScrollbarUtil";
 import TemplateUtil from "../utils/TemplateUtil";
+import UpdateServiceBanner from "../components/UpdateServiceBanner";
+import UpdateServiceBannerStore from "../stores/UpdateServiceBannerStore";
+import UpdateServiceBannerActions from "../events/UpdateServiceBannerActions";
+import {
+  compare,
+  getVersionFromVersionObject,
+  showNotification,
+  setInLocalStorage
+} from "../core/UpdateStream";
 
+const getNewVersion = () => UpdateServiceBannerStore.get("newVersion");
+const isUpgradeBannerVisible = () => UpdateServiceBannerStore.get("isVisible");
 const PageHeader = ({
   actions,
   addButton,
@@ -84,6 +95,11 @@ var Page = React.createClass({
     this.internalStorage_set({
       rendered: true
     });
+
+    compare.subscribe(values => {
+      showNotification(getVersionFromVersionObject(values[1]));
+    });
+
     this.forceUpdate();
   },
 
@@ -149,6 +165,22 @@ var Page = React.createClass({
     );
   },
 
+  dismissBanner() {
+    setInLocalStorage("dismissedVersion", getNewVersion());
+    UpdateServiceBannerActions.hide();
+  },
+
+  getUpdateServiceBanner() {
+    return (
+      isUpgradeBannerVisible() && (
+        <UpdateServiceBanner
+          newVersion={getNewVersion()}
+          onDismiss={this.dismissBanner}
+        />
+      )
+    );
+  },
+
   render() {
     const { className, navigation, dontScroll, title } = this.props;
 
@@ -163,6 +195,7 @@ var Page = React.createClass({
     return (
       <div className={classSet}>
         <MountService.Mount type="Page:TopBanner" />
+        {this.getUpdateServiceBanner()}
         {this.getPageHeader(title, navigation)}
         {this.getContent()}
       </div>

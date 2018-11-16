@@ -3,7 +3,6 @@ import compareVersions from "compare-versions";
 import { request } from "@dcos/http-service";
 import { BehaviorSubject } from "rxjs";
 
-import UpdateServiceBannerActions from "#SRC/js/events/UpdateServiceBannerActions";
 import UserSettingsStore from "#SRC/js/stores/UserSettingsStore";
 import Util from "#SRC/js/utils/Util";
 import { SAVED_STATE_KEY } from "#SRC/js/constants/UserSettings";
@@ -13,17 +12,6 @@ const CHECK_DELAY: number = 2000; // Once every 24 hours 24 * 60 * 60 * 1000
 const DCOS_UI_VERSION_SETTING: string = "dcosUIVersion";
 const DISMISSED_VERSION: string = "dismissedVersion";
 const LAST_TIME_CHECK: string = "lastTimeCheck";
-
-export function showNotification(newVersion: string): void {
-  // TODO: show notification
-  // When dismissing, save dismissed version in local storage
-  // const currentVersion: string = (window as any).DCOS_UI_VERSION;
-  // alert(
-  //   `A new version of DCOS UI is available. Upgrade ${currentVersion} to ${newVersion}. Dismiss.`
-  // );
-
-  UpdateServiceBannerActions.show(newVersion);
-}
 
 export function getVersionFromVersionObject(versionObject: any): string {
   return Object.keys(versionObject.response.results)[0];
@@ -57,7 +45,7 @@ function getContentType({ action, actionType, entity, version }: any): string {
   return `application/vnd.dcos.${entity}.${action}-${actionType}+json;charset=utf-8;version=${version}`;
 }
 
-const localStorageDismissedVersion: BehaviorSubject<
+export const localStorageDismissedVersion: BehaviorSubject<
   string
 > = new BehaviorSubject(
   getFromLocalStorage(DISMISSED_VERSION)

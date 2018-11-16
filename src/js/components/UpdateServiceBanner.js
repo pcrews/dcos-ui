@@ -2,18 +2,33 @@ import React from "react";
 import { Trans } from "@lingui/macro";
 import { InfoBoxBanner } from "@dcos/ui-kit";
 import { routerShape } from "react-router";
+import { setInLocalStorage } from "../core/UpdateStream";
 
-class UpdateServiceBanner extends React.Component {
+export default class UpdateServiceBanner extends React.Component {
   constructor(props) {
     super(props);
 
-    // temporary to fake the "update"
     this.state = {
-      isUpdating: false
+      isUpdating: false, // temporary to fake the "update"
+      isShown: false
     };
 
     this.goToReleaseNotes = this.goToReleaseNotes.bind(this);
     this.updateService = this.updateService.bind(this);
+    this.onDismiss = this.onDismiss.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { newVersion, dismissedVersion } = nextProps;
+
+    this.setState({
+      isShown: newVersion && dismissedVersion !== newVersion
+    });
+  }
+
+  onDismiss() {
+    setInLocalStorage("dismissedVersion", this.props.newVersion);
+    // this.setState({ isShown: false });
   }
 
   updateService() {
@@ -24,7 +39,7 @@ class UpdateServiceBanner extends React.Component {
     // faking the "update"
     this.setState({ isUpdating: true });
     global.setTimeout(() => {
-      this.props.onDismiss();
+      this.onDismiss();
     }, 3000);
   }
 
@@ -35,9 +50,9 @@ class UpdateServiceBanner extends React.Component {
   }
 
   render() {
-    const { newVersion, onDismiss } = this.props;
+    const { newVersion } = this.props;
 
-    return (
+    return this.state.isShown ? (
       <InfoBoxBanner
         appearance="info"
         message={
@@ -73,14 +88,12 @@ class UpdateServiceBanner extends React.Component {
             <Trans render="span">Release Notes</Trans>
           </div>
         }
-        onDismiss={onDismiss}
+        onDismiss={this.onDismiss}
       />
-    );
+    ) : null;
   }
 }
 
 UpdateServiceBanner.contextTypes = {
   router: routerShape
 };
-
-module.exports = UpdateServiceBanner;

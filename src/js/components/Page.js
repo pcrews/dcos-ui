@@ -2,6 +2,7 @@ import classNames from "classnames/dedupe";
 import PropTypes from "prop-types";
 import React from "react";
 import { StoreMixin } from "mesosphere-shared-reactjs";
+import { componentFromStream } from "data-service";
 
 import { MountService } from "foundation-ui";
 import BasePageHeader from "../components/PageHeader";
@@ -10,17 +11,23 @@ import InternalStorageMixin from "../mixins/InternalStorageMixin";
 import ScrollbarUtil from "../utils/ScrollbarUtil";
 import TemplateUtil from "../utils/TemplateUtil";
 import UpdateServiceBanner from "../components/UpdateServiceBanner";
-import UpdateServiceBannerStore from "../stores/UpdateServiceBannerStore";
-import UpdateServiceBannerActions from "../events/UpdateServiceBannerActions";
 import {
   compare,
   getVersionFromVersionObject,
-  showNotification,
-  setInLocalStorage
+  localStorageDismissedVersion
 } from "../core/UpdateStream";
 
-const getNewVersion = () => UpdateServiceBannerStore.get("newVersion");
-const isUpgradeBannerVisible = () => UpdateServiceBannerStore.get("isVisible");
+const UpgradeBanner = componentFromStream(props$ => {
+  return props$.combineLatest(compare.startWith(null), (props$, result) => {
+    return (
+      <UpdateServiceBanner
+        newVersion={result && getVersionFromVersionObject(result[1])}
+        dismissedVersion={localStorageDismissedVersion.getValue()}
+      />
+    );
+  });
+});
+
 const PageHeader = ({
   actions,
   addButton,
@@ -96,9 +103,9 @@ var Page = React.createClass({
       rendered: true
     });
 
-    compare.subscribe(values => {
-      showNotification(getVersionFromVersionObject(values[1]));
-    });
+    // compare.subscribe(values => {
+    //   showNotification(getVersionFromVersionObject(values[1]));
+    // });
 
     this.forceUpdate();
   },
@@ -165,22 +172,6 @@ var Page = React.createClass({
     );
   },
 
-  dismissBanner() {
-    setInLocalStorage("dismissedVersion", getNewVersion());
-    UpdateServiceBannerActions.hide();
-  },
-
-  getUpdateServiceBanner() {
-    return (
-      isUpgradeBannerVisible() && (
-        <UpdateServiceBanner
-          newVersion={getNewVersion()}
-          onDismiss={this.dismissBanner}
-        />
-      )
-    );
-  },
-
   render() {
     const { className, navigation, dontScroll, title } = this.props;
 
@@ -195,7 +186,7 @@ var Page = React.createClass({
     return (
       <div className={classSet}>
         <MountService.Mount type="Page:TopBanner" />
-        {this.getUpdateServiceBanner()}
+        <UpgradeBanner />
         {this.getPageHeader(title, navigation)}
         {this.getContent()}
       </div>

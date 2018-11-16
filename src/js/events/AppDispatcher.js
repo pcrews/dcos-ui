@@ -34,17 +34,6 @@ var AppDispatcher = Object.assign(new Dispatcher(), {
       source: ActionTypes.LANGUAGE_MODAL_ACTION,
       action
     });
-  },
-
-  handleUpdateServiceAction(action) {
-    if (!action.type && process.env.NODE_ENV !== "production") {
-      console.warn("Empty action.type: you likely mistyped the action.");
-    }
-
-    this.dispatch({
-      source: ActionTypes.UPDATE_SERVICE_ACTION,
-      action
-    });
   }
 });
 

@@ -23,7 +23,12 @@ const UpdateServiceBanner = withRouter(
     ): Subscribable<React.ReactNode> => {
       return (props$ as Observable<UpdateServiceBannerProps>).combineLatest(
         compare.startWith(""),
-        (props: UpdateServiceBannerProps, newVersion: string) => {
+        localStorageDismissedVersion,
+        (
+          props: UpdateServiceBannerProps,
+          newVersion: string,
+          localStorageDismissedVersion: string
+        ) => {
           function onDismiss() {
             setInLocalStorage("dismissedVersion", newVersion);
           }
@@ -47,8 +52,7 @@ const UpdateServiceBanner = withRouter(
             }, 3000);
           }
 
-          return newVersion &&
-            newVersion !== localStorageDismissedVersion.getValue() ? (
+          return newVersion && newVersion !== localStorageDismissedVersion ? (
             <InfoBoxBanner
               appearance="info"
               message={

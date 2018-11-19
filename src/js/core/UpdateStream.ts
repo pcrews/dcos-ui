@@ -13,13 +13,22 @@ const DCOS_UI_VERSION_SETTING: string = "dcosUIVersion";
 const DISMISSED_VERSION: string = "dismissedVersion";
 const LAST_TIME_CHECK: string = "lastTimeCheck";
 
-export function showNotification(newVersion: string): void {
-  // TODO: show notification
-  // When dismissing, save dismissed version in local storage
-  const currentVersion: string = (window as any).DCOS_UI_VERSION;
-  alert(
-    `A new version of DCOS UI is available. Upgrade ${currentVersion} to ${newVersion}. Dismiss.`
-  );
+interface ContentTypeObject {
+  action: string;
+  actionType: string;
+  entity: string;
+  version: string;
+}
+
+interface DCOSUserSettings {
+  dcosUIVersion: DCOSUIVersion;
+  [key: string]: DCOSUIVersion;
+}
+
+interface DCOSUIVersion {
+  dismissedVersion: string;
+  lastTimeCheck: number;
+  [key: string]: string | number;
 }
 
 function getVersionFromVersionObject(versionObject: any): string {
@@ -36,7 +45,8 @@ function getFromLocalStorage(key: string): any {
 }
 
 function setInLocalStorage(key: string, value: any): void {
-  const savedStates: any = UserSettingsStore.getKey(SAVED_STATE_KEY) || {};
+  const savedStates: DCOSUserSettings =
+    UserSettingsStore.getKey(SAVED_STATE_KEY) || {};
   savedStates[DCOS_UI_VERSION_SETTING] = {
     dismissedVersion: localStorageDismissedVersion.getValue(),
     lastTimeCheck: localStorageCheckedTime.getValue()
@@ -50,7 +60,12 @@ function setInLocalStorage(key: string, value: any): void {
   }
 }
 
-function getContentType({ action, actionType, entity, version }: any): string {
+function getContentType({
+  action,
+  actionType,
+  entity,
+  version
+}: ContentTypeObject): string {
   return `application/vnd.dcos.${entity}.${action}-${actionType}+json;charset=utf-8;version=${version}`;
 }
 
@@ -100,17 +115,26 @@ const fetchedVersion: Observable<RequestResponse<{}>> = request(
   }
 ).retry(4);
 
-export const compare: Observable<string> = Observable.timer(
-  0,
-  CHECK_DELAY
-).switchMap(() =>
-  Observable.combineLatest(filteredDismissedVersion, fetchedVersion)
-    .filter(values => {
-      const filteredDismissedVersion = values[0];
-      const newVersion = getVersionFromVersionObject(values[1]);
+export function compareStream(
+  delay: number,
+  dismissedVersion: Observable<string>,
+  newFetchedVersion: Observable<RequestResponse<{}>>
+): Observable<string> {
+  return Observable.timer(0, delay)
+    .switchMap(() =>
+      Observable.combineLatest(dismissedVersion, newFetchedVersion)
+    )
+    .filter(([dismissed, nextVersion]) => {
+      const newVersion = getVersionFromVersionObject(nextVersion);
       setInLocalStorage(LAST_TIME_CHECK, new Date().getTime());
 
-      return compareVersions(newVersion, filteredDismissedVersion) === 1;
+      return compareVersions(newVersion, dismissed) === 1;
     })
-    .map(values => getVersionFromVersionObject(values[1]))
+    .map(([, nextVersion]) => getVersionFromVersionObject(nextVersion));
+}
+
+export const compare = compareStream(
+  CHECK_DELAY,
+  filteredDismissedVersion,
+  fetchedVersion
 );

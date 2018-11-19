@@ -2,7 +2,6 @@ import classNames from "classnames/dedupe";
 import PropTypes from "prop-types";
 import React from "react";
 import { StoreMixin } from "mesosphere-shared-reactjs";
-import { componentFromStream } from "data-service";
 
 import { MountService } from "foundation-ui";
 import BasePageHeader from "../components/PageHeader";
@@ -11,22 +10,6 @@ import InternalStorageMixin from "../mixins/InternalStorageMixin";
 import ScrollbarUtil from "../utils/ScrollbarUtil";
 import TemplateUtil from "../utils/TemplateUtil";
 import UpdateServiceBanner from "../components/UpdateServiceBanner";
-import {
-  compare,
-  getVersionFromVersionObject,
-  localStorageDismissedVersion
-} from "../core/UpdateStream";
-
-const UpgradeBanner = componentFromStream(props$ => {
-  return props$.combineLatest(compare.startWith(null), (props$, result) => {
-    return (
-      <UpdateServiceBanner
-        newVersion={result && getVersionFromVersionObject(result[1])}
-        dismissedVersion={localStorageDismissedVersion.getValue()}
-      />
-    );
-  });
-});
 
 const PageHeader = ({
   actions,
@@ -186,7 +169,7 @@ var Page = React.createClass({
     return (
       <div className={classSet}>
         <MountService.Mount type="Page:TopBanner" />
-        <UpgradeBanner />
+        <UpdateServiceBanner />
         {this.getPageHeader(title, navigation)}
         {this.getContent()}
       </div>

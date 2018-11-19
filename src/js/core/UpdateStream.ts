@@ -85,17 +85,16 @@ const fetchedVersion: Observable<any> = request("/package/list-versions", {
   body: JSON.stringify({ includePackageVersions: true, packageName: "dcos-ui" })
 }).retry(4);
 
-export const compare: Observable<[string, object]> = Observable.timer(
+export const compare: Observable<string> = Observable.timer(
   0,
   CHECK_DELAY
 ).switchMap(() =>
-  Observable.combineLatest(filteredDismissedVersion, fetchedVersion).filter(
-    values => {
+  Observable.combineLatest(filteredDismissedVersion, fetchedVersion)
+    .filter(values => {
       const filteredDismissedVersion = values[0];
       const newVersion = getVersionFromVersionObject(values[1]);
       setInLocalStorage(LAST_TIME_CHECK, new Date().getTime());
-
       return compareVersions(newVersion, filteredDismissedVersion) === 1;
-    }
-  )
+    })
+    .map(values => getVersionFromVersionObject(values[1]))
 );

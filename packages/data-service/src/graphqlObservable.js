@@ -52,6 +52,7 @@ function resolveOperation(types, definition, context) {
     mutation: "Mutation"
   };
 
+  console.log("resolveOp", definition);
   const nextTypeMap = types[
     translateOperation[definition.operation]
   ].getFields();
@@ -61,18 +62,22 @@ function resolveOperation(types, definition, context) {
 
 function resolveNode(types, definition, context, parent) {
   const args = buildResolveArgs(definition, context);
-  const resolver = types[definition.name.value];
+  const currentType = types[definition.name.value];
+  console.log("Def", definition);
 
-  if (!resolver) {
+  if (!currentType) {
     return throwObservable(`missing resolver for ${definition.name.value}`);
   }
 
-  const resolvedObservable = resolver.resolve(
-    parent,
-    args,
-    context,
-    null // that would be the info
-  );
+  console.log("R", currentType);
+  const resolvedObservable = currentType.resolve
+    ? currentType.resolve(
+        parent,
+        args,
+        context,
+        null // that would be the info
+      )
+    : Observable.of(parent);
 
   if (!resolvedObservable) {
     return throwObservable("resolver returns empty value");
@@ -88,10 +93,16 @@ function resolveNode(types, definition, context, parent) {
     }
 
     if (emitted instanceof Array) {
-      return resolveArrayResults(emitted, types, definition, context, resolver);
+      return resolveArrayResults(
+        emitted,
+        types,
+        definition,
+        context,
+        currentType
+      );
     }
 
-    return resolveResult(emitted, types, definition, context, resolver);
+    return resolveResult(emitted, types, definition, context, currentType);
   });
 }
 
@@ -105,9 +116,9 @@ function resolveLeaf(types, definition, context, parent) {
     : Observable.of(parent[name]);
 }
 
-function resolveResult(parent, types, definition, context, resolver) {
+function resolveResult(parent, types, definition, context, currentType) {
   return definition.selectionSet.selections.reduce((acc, sel) => {
-    const refinedTypes = refineTypes(resolver, parent, types);
+    const refinedTypes = refineTypes(currentType, types);
     const result = resolve(refinedTypes, sel, context, parent);
     const fieldName = (sel.alias || sel.name).value;
 
@@ -115,14 +126,14 @@ function resolveResult(parent, types, definition, context, resolver) {
   }, Observable.of({}));
 }
 
-function resolveArrayResults(parents, types, definition, context, resolver) {
+function resolveArrayResults(parents, types, definition, context, currentType) {
   return parents.reduce((acc, result) => {
     const resultObserver = resolveResult(
       result,
       types,
       definition,
       context,
-      resolver
+      currentType
     );
 
     return acc.combineLatest(resultObserver, listAppend);
@@ -143,9 +154,11 @@ function buildResolveArgs(definition, context) {
   );
 }
 
-function refineTypes(resolver, parent, types) {
-  return resolver && resolver.type
-    ? { ...getNamedType(resolver.type).getFields(), types }
+function refineTypes(currentType, types) {
+  console.log("Resolver", currentType);
+
+  return currentType && currentType.type
+    ? { ...getNamedType(currentType.type).getFields(), types }
     : types;
 }
 

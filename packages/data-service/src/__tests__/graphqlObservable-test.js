@@ -179,6 +179,16 @@ const itMarbles = (title, test) => {
   );
 };
 
+itMarbles.only = (title, test) => {
+  return it.only(
+    title,
+    marbles(m => {
+      m.bind();
+      test(m);
+    })
+  );
+};
+
 describe("graphqlObservable", function() {
   describe("Query", function() {
     itMarbles("solves listing all fields", function(m) {
@@ -310,7 +320,9 @@ describe("graphqlObservable", function() {
           m.expect(result.take(1)).toBeObservable(expected);
         });
 
-        itMarbles("if defined it executes the field resolver", function(m) {
+        itMarbles.only("if defined it executes the field resolver", function(
+          m
+        ) {
           const query = gql`
             query {
               plain {

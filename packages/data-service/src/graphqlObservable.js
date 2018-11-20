@@ -17,10 +17,129 @@ export function graphqlObservable(doc, schema, context) {
   if (doc.definitions.length !== 1) {
     return throwObservable("document root must have a single definition");
   }
+  const types = schema._typeMap;
 
-  return resolve(schema._typeMap, doc.definitions[0], context, null).map(
-    data => ({ data })
-  );
+  function resolve(definition, context, parent, type) {
+    if (definition.kind === "OperationDefinition") {
+      return resolveOperation(definition, context);
+    }
+
+    if (definition.kind === "Field" && definition.selectionSet !== undefined) {
+      return resolveNode(definition, context, parent, type);
+    }
+
+    if (definition.kind === "Field") {
+      return resolveLeaf(definition, context, parent, type);
+    }
+
+    return throwObservable(`kind not supported "${definition.kind}".`);
+  }
+
+  function resolveOperation(definition, context) {
+    return resolveResult(
+      definition,
+      context,
+      null,
+      getChildType(null, definition)
+    );
+  }
+
+  function resolveNode(definition, context, parent, type) {
+    const args = buildResolveArgs(definition, context);
+
+    console.log({ definition, context, parent, type });
+    const resolvedObservable = type.resolve
+      ? type.resolve(
+          parent,
+          args,
+          context,
+          null // that would be the info
+        )
+      : Observable.of(parent);
+
+    if (!resolvedObservable) {
+      return throwObservable("resolver returns empty value");
+    }
+
+    if (!(resolvedObservable instanceof Observable)) {
+      return throwObservable("resolver does not return an observable");
+    }
+
+    return resolvedObservable.concatMap(emitted => {
+      if (!emitted) {
+        return throwObservable("resolver emitted empty value");
+      }
+
+      if (emitted instanceof Array) {
+        return resolveArrayResults(definition, context, emitted, type);
+      }
+
+      return resolveResult(definition, context, emitted, type);
+    });
+  }
+
+  function resolveLeaf(definition, context, parent, type) {
+    const name = definition.name.value;
+
+    // const args = buildResolveArgs(definition, context);
+    // const type = types[name];
+
+    return Observable.of(parent[name]);
+    // return type && type.resolve
+    //   ? type.resolve(parent, args, context)
+    //   : Observable.of(parent[name]);
+  }
+
+  function resolveResult(definition, context, parent, type) {
+    return definition.selectionSet.selections.reduce((acc, sel) => {
+      // Get the child type for a the current selection
+      const childType = getChildType(type, sel);
+      const result = resolve(sel, context, parent, childType);
+      const fieldName = (sel.alias || sel.name).value;
+
+      return acc.combineLatest(result, objectAppendWithKey(fieldName));
+    }, Observable.of({}));
+  }
+
+  function resolveArrayResults(definition, context, parents, type) {
+    return parents.reduce((acc, result) => {
+      const resultObserver = resolveResult(definition, context, result, type);
+
+      return acc.combineLatest(resultObserver, listAppend);
+    }, Observable.of([]));
+  }
+
+  function getChildType(parentType, definition) {
+    console.log("ChildType for", { parentType, definition });
+    const translateOperation = {
+      query: "Query",
+      mutation: "Mutation"
+    };
+
+    // Operation is given (query or mutation)
+    if (parentType === null && definition.operation) {
+      return types[translateOperation[definition.operation]];
+    }
+
+    const parentTypeFields =
+      parentType.getFields instanceof Function ? parentType.getFields() : {};
+
+    // Field on a type is given
+    if (parentType !== null && parentTypeFields[definition.name.value]) {
+      return parentTypeFields[definition.name.value];
+    }
+
+    // Access to a globally known type
+    const currentType = types[definition.name.value];
+
+    return currentType && currentType.type
+      ? getNamedType(currentType.type)
+      : null;
+  }
+
+  return resolve(doc.definitions[0], context, null, null).map(data => ({
+    data
+  }));
 }
 
 function throwObservable(error) {
@@ -28,116 +147,6 @@ function throwObservable(error) {
   const graphqlError = new Error(graphqlErrorMessage);
 
   return Observable.throw(graphqlError);
-}
-
-function resolve(types, definition, context, parent) {
-  if (definition.kind === "OperationDefinition") {
-    return resolveOperation(types, definition, context);
-  }
-
-  if (definition.kind === "Field" && definition.selectionSet !== undefined) {
-    return resolveNode(types, definition, context, parent);
-  }
-
-  if (definition.kind === "Field") {
-    return resolveLeaf(types, definition, context, parent);
-  }
-
-  return throwObservable(`kind not supported "${definition.kind}".`);
-}
-
-function resolveOperation(types, definition, context) {
-  const translateOperation = {
-    query: "Query",
-    mutation: "Mutation"
-  };
-
-  console.log("resolveOp", definition);
-  const nextTypeMap = types[
-    translateOperation[definition.operation]
-  ].getFields();
-
-  return resolveResult(null, { ...nextTypeMap, ...types }, definition, context);
-}
-
-function resolveNode(types, definition, context, parent) {
-  const args = buildResolveArgs(definition, context);
-  const currentType = types[definition.name.value];
-  console.log("Def", definition);
-
-  if (!currentType) {
-    return throwObservable(`missing resolver for ${definition.name.value}`);
-  }
-
-  console.log("R", currentType);
-  const resolvedObservable = currentType.resolve
-    ? currentType.resolve(
-        parent,
-        args,
-        context,
-        null // that would be the info
-      )
-    : Observable.of(parent);
-
-  if (!resolvedObservable) {
-    return throwObservable("resolver returns empty value");
-  }
-
-  if (!(resolvedObservable instanceof Observable)) {
-    return throwObservable("resolver does not return an observable");
-  }
-
-  return resolvedObservable.concatMap(emitted => {
-    if (!emitted) {
-      return throwObservable("resolver emitted empty value");
-    }
-
-    if (emitted instanceof Array) {
-      return resolveArrayResults(
-        emitted,
-        types,
-        definition,
-        context,
-        currentType
-      );
-    }
-
-    return resolveResult(emitted, types, definition, context, currentType);
-  });
-}
-
-function resolveLeaf(types, definition, context, parent) {
-  const args = buildResolveArgs(definition, context);
-  const name = definition.name.value;
-  const type = types[name];
-
-  return type && type.resolve
-    ? type.resolve(parent, args, context)
-    : Observable.of(parent[name]);
-}
-
-function resolveResult(parent, types, definition, context, currentType) {
-  return definition.selectionSet.selections.reduce((acc, sel) => {
-    const refinedTypes = refineTypes(currentType, types);
-    const result = resolve(refinedTypes, sel, context, parent);
-    const fieldName = (sel.alias || sel.name).value;
-
-    return acc.combineLatest(result, objectAppendWithKey(fieldName));
-  }, Observable.of({}));
-}
-
-function resolveArrayResults(parents, types, definition, context, currentType) {
-  return parents.reduce((acc, result) => {
-    const resultObserver = resolveResult(
-      result,
-      types,
-      definition,
-      context,
-      currentType
-    );
-
-    return acc.combineLatest(resultObserver, listAppend);
-  }, Observable.of([]));
 }
 
 function buildResolveArgs(definition, context) {
@@ -152,14 +161,6 @@ function buildResolveArgs(definition, context) {
       ),
     {}
   );
-}
-
-function refineTypes(currentType, types) {
-  console.log("Resolver", currentType);
-
-  return currentType && currentType.type
-    ? { ...getNamedType(currentType.type).getFields(), types }
-    : types;
 }
 
 const objectAppendWithKey = key => {

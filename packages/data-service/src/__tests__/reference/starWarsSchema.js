@@ -137,7 +137,6 @@ const characterInterface = new GraphQLInterfaceType({
     }
   }),
   resolveType(character) {
-    console.log("Resolving type for", character);
     if (character.type === "Human") {
       return humanType;
     }
@@ -145,15 +144,6 @@ const characterInterface = new GraphQLInterfaceType({
       return droidType;
     }
   }
-  // TODO: see where the .type comes from in the spec
-  // resolveType(character) {
-  //   if (character.type === "Human") {
-  //     return humanType;
-  //   }
-  //   if (character.type === "Droid") {
-  //     return droidType;
-  //   }
-  // }
 });
 
 /**

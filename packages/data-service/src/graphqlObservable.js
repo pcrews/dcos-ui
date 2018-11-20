@@ -20,41 +20,41 @@ export function graphqlObservable(doc, schema, context) {
   const types = schema._typeMap;
 
   function resolve(definition, context, parent, type) {
-    console.log(
-      "Resolving",
-      definition.kind === "OperationDefinition"
-        ? definition.operation
-        : definition.name.value
-    );
-    const currentType = getChildType(type, definition, parent);
-    console.log("ParentType:", type);
-    console.log("Type:", currentType);
-    console.log("Parent:", parent);
+    const currentType = getChildType(type, definition);
 
     if (definition.kind === "OperationDefinition") {
       return resolveOperation(definition, context, null, currentType);
     }
 
     if (definition.kind === "Field") {
-      console.log("Me is field");
       const args = buildResolveArgs(definition, context);
-      const fieldName = definition.name.value;
-      const fieldsOfType = type.getFields();
-      const fieldDefinition = fieldsOfType[fieldName];
       let resolvedObservable;
 
       // TODO: extract into own function with early returns?
-      if (fieldDefinition && fieldDefinition.resolve instanceof Function) {
-        console.log("Executing resolve function");
-        resolvedObservable = fieldDefinition.resolve(
+      if (currentType && currentType.resolve instanceof Function) {
+        resolvedObservable = currentType.resolve(
           parent,
           args,
           context,
           null // that would be the info
         );
       } else {
-        console.log("resolving parent[fieldName]");
-        resolvedObservable = Observable.of(parent[fieldName]);
+        const fieldsOfType = type.getFields();
+        const fieldName = definition.name.value;
+        const fieldDefinition = fieldsOfType[fieldName];
+
+        if (fieldDefinition && fieldDefinition.resolve instanceof Function) {
+          resolvedObservable = fieldDefinition.resolve(
+            parent,
+            args,
+            context,
+            null // that would be the info
+          );
+        } else if (definition.selectionSet !== undefined) {
+          resolvedObservable = Observable.of(parent); // TODO: this hints that we are not standard conform for nested normal resolvers
+        } else {
+          resolvedObservable = Observable.of(parent[fieldName]);
+        }
       }
 
       if (!resolvedObservable) {
@@ -74,17 +74,22 @@ export function graphqlObservable(doc, schema, context) {
         if (!emitted) {
           return throwObservable("resolver emitted empty value");
         }
-        console.log("sth was emitted", emitted);
 
         if (emitted instanceof Array) {
-          console.log("resolving the array");
-
           return resolveArrayResults(definition, context, emitted, currentType);
         }
 
         return resolveResult(definition, context, emitted, currentType);
       });
     }
+
+    // if (definition.kind === "Field" && definition.selectionSet !== undefined) {
+    //   return resolveNode(definition, context, parent, type);
+    // }
+
+    // if (definition.kind === "Field") {
+    //   return resolveLeaf(definition, context, parent, type);
+    // }
 
     return throwObservable(`kind not supported "${definition.kind}".`);
   }
@@ -106,47 +111,32 @@ export function graphqlObservable(doc, schema, context) {
 
   function resolveArrayResults(definition, context, parents, type) {
     return parents.reduce((acc, result) => {
-      console.log("calling resolveResult with ", { result, parents });
       const resultObserver = resolveResult(definition, context, result, type);
 
       return acc.combineLatest(resultObserver, listAppend);
     }, Observable.of([]));
   }
 
-  function getChildType(parentType, definition, parent) {
+  function getChildType(parentType, definition) {
     const translateOperation = {
       query: "Query",
       mutation: "Mutation"
     };
-
-    // TODO: seperate type and field here, it seems interchanged
 
     // Operation is given (query or mutation), returns a type
     if (parentType === null && definition.operation) {
       return types[translateOperation[definition.operation]];
     }
 
-    // See if we need to use a type resolver
-    if (parentType !== null && parentType.resolveType instanceof Function) {
-      console.log("resolveType route");
-      // TODO: Not GraphQL spec compliant (should also have context and info)
-      const type = parentType.resolveType(parent);
-
-      return getNamedType(type.getFields()[definition.name.value]);
-    }
-
-    // Types are given with access to the requested field, so get type of resolved field
+    // Field on a type is given, returns the type of the fields value
     if (
       parentType !== null &&
       parentType.getFields instanceof Function &&
       parentType.getFields()[definition.name.value]
     ) {
-      console.log("field on type route");
-
       return getNamedType(parentType.getFields()[definition.name.value].type);
     }
 
-    console.log("default route", definition.name.value);
     // Access to a globally known type, returns a tyoe
     const currentType = types[definition.name.value];
 

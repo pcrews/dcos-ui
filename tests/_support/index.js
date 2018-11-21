@@ -475,6 +475,15 @@ Cypress.Commands.add("configureCluster", function(configuration) {
     );
   }
 
+  if (configuration.upgradeUI) {
+    router.route({
+      method: "POST",
+      url: /package\/list-versions/,
+      status: 200,
+      response: "fx:dcos-ui/fetchedVersion.json"
+    });
+  }
+
   if (configuration.universePackages) {
     router
       // Packages

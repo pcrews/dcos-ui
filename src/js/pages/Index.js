@@ -72,6 +72,7 @@ var Index = React.createClass({
 
     ConfigStore.fetchCCID();
     ConfigStore.addChangeListener(EventTypes.CONFIG_ERROR, this.onConfigError);
+    // compare.subscribe(newVersion => showNotification(newVersion));
   },
 
   shouldComponentUpdate(nextProps, nextState) {

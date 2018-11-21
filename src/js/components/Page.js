@@ -169,7 +169,9 @@ var Page = React.createClass({
     return (
       <div className={classSet}>
         <MountService.Mount type="Page:TopBanner" />
-        <UpdateServiceBanner />
+        <div className="updateServiceBanner">
+          <UpdateServiceBanner />
+        </div>
         {this.getPageHeader(title, navigation)}
         {this.getContent()}
       </div>

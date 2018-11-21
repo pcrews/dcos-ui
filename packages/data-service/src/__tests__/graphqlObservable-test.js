@@ -15,6 +15,7 @@ import { graphqlObservable } from "../graphqlObservable";
 const typeDefs = `
   type Shuttle {
     name: String!
+    firstFlight: Int
   }
 
   type Query {

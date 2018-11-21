@@ -77,6 +77,7 @@ const fieldResolverSchema = makeExecutableSchema({
       giveMeTheParentFieldResolver: String!
       giveMeTheArgsFieldResolver(arg: String!): String!
       giveMeTheContextFieldResolver: String!
+      contextualFieldResolver: String!
     }
 
     type ObjectValue {
@@ -118,6 +119,9 @@ const fieldResolverSchema = makeExecutableSchema({
       },
       giveMeTheContextFieldResolver(_parent, _args, context) {
         return Observable.of(context.newValue);
+      },
+      contextualFieldResolver(_parent, _args_, context) {
+        return context.contextualFieldResolver;
       }
     },
     Item: {
@@ -523,6 +527,44 @@ describe("graphqlObservable", function() {
         });
         const result = graphqlObservable(query, fieldResolverSchema, {});
         m.expect(result.take(1)).toBeObservable(expected);
+      });
+
+      itMarbles("same level field resolvers emit partial responses", function(
+        m
+      ) {
+        const query = gql`
+          query {
+            plain {
+              noFieldResolver
+              contextualFieldResolver
+            }
+          }
+        `;
+        const expected = m.cold("a--(b|)", {
+          a: {
+            data: {
+              plain: {
+                noFieldResolver: "Yes",
+                contextualFieldResolver: null
+              }
+            }
+          },
+          b: {
+            data: {
+              plain: {
+                noFieldResolver: "Yes",
+                contextualFieldResolver: "Also Yes"
+              }
+            }
+          }
+        });
+
+        const result = graphqlObservable(query, fieldResolverSchema, {
+          contextualFieldResolver: m.cold("--a", {
+            a: "Also Yes"
+          })
+        });
+        m.expect(result.take(2)).toBeObservable(expected);
       });
     });
   });

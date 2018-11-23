@@ -5,6 +5,9 @@ import "rxjs/add/operator/combineLatest";
 import "rxjs/add/operator/startWith";
 import "rxjs/add/operator/do";
 import "rxjs/add/operator/map";
+import "rxjs/add/operator/merge";
+import "rxjs/add/operator/scan";
+import "rxjs/add/operator/filter";
 import "rxjs/add/operator/concatMap";
 import {
   DefinitionNode,
@@ -160,6 +163,8 @@ export function graphqlObservable<T = object>(
       return Observable.of(parent);
     }
 
+    // combineEarliest
+
     return definition.selectionSet.selections.reduce((acc, sel) => {
       if (sel.kind === "FragmentSpread" || sel.kind === "InlineFragment") {
         return throwObservable("Unsupported use of fragments in selection set");
@@ -178,6 +183,14 @@ export function graphqlObservable<T = object>(
     parents: any[],
     parentType: GraphQLType | null
   ) {
+    // combineEarliest:
+    // return combineEarliest(
+    //   parents.map(result => {
+    //     const nextType = getResultType(parentType, definition, result);
+    //     return resolveResult(definition, context, result, nextType);
+    //   })
+    // );
+
     return parents.reduce((acc, result) => {
       const nextType = getResultType(parentType, definition, result);
       const resultObserver = resolveResult(
@@ -272,6 +285,17 @@ function buildResolveArgs(definition: FieldNode, context: object) {
     }),
     {}
   );
+}
+
+function combineEarliest<T>(
+  obs1: Observable<object>,
+  obs2: Observable<T>,
+  fieldName: string
+): Observable<object> {
+  const obs2WithKey = obs2.map(value => ({ [fieldName]: value }));
+
+  return obs1.merge(obs2WithKey).scan((carry, item) => ({ ...carry, ...item }));
+  return obs1.combineLatest(obs2, projection);
 }
 
 const objectAppendWithKey = (key: string) => {

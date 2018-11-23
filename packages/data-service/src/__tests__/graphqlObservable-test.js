@@ -5,7 +5,7 @@ import "rxjs/add/operator/combineLatest";
 import "rxjs/add/operator/map";
 import "rxjs/add/operator/take";
 
-import { marbles } from "rxjs-marbles/jest";
+import itMarbles from "../itMarbles";
 
 import { makeExecutableSchema } from "graphql-tools";
 import gql from "graphql-tag";
@@ -172,17 +172,6 @@ const fieldResolverSchema = makeExecutableSchema({
     }
   }
 });
-
-// jest helper who binds the marbles for you
-const itMarbles = (title, test) => {
-  return it(
-    title,
-    marbles(m => {
-      m.bind();
-      test(m);
-    })
-  );
-};
 
 describe("graphqlObservable", function() {
   describe("Query", function() {
@@ -540,6 +529,8 @@ describe("graphqlObservable", function() {
             }
           }
         `;
+
+        // TODO: write types for field resolvers
         const expected = m.cold("a--(b|)", {
           a: {
             data: {

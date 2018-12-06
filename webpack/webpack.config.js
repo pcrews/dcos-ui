@@ -2,11 +2,14 @@ const { DefinePlugin } = require("webpack");
 const path = require("path");
 const LessColorLighten = require("less-color-lighten");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const fs = require("fs");
 
-function requireAll(array) {
-  // https://stackoverflow.com/a/34574630/1559386
-  return array.map(require.resolve);
-}
+// Babel config must be copied into babel-loader options
+// because babelrc won't be resolved by babel-loader when
+// resolving modules from external plugins directory
+const babelrc = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "../.babelrc"))
+);
 
 module.exports = {
   entry: "./src/js/index.js",
@@ -75,25 +78,7 @@ module.exports = {
         }
       },
       {
-        test: /\.tsx?$/,
-        exclude: /node_modules/,
-        use: [
-          {
-            loader: "thread-loader"
-          },
-          {
-            loader: "babel-loader"
-          },
-          {
-            loader: "ts-loader",
-            options: {
-              happyPackMode: true
-            }
-          }
-        ]
-      },
-      {
-        test: /\.js$/,
+        test: /\.(tsx|ts|js)?$/,
         exclude: /node_modules/,
         use: [
           "thread-loader",
@@ -101,11 +86,7 @@ module.exports = {
             loader: "babel-loader",
             options: {
               cacheDirectory: true,
-              presets: requireAll([
-                "babel-preset-es2015",
-                "babel-preset-stage-3",
-                "babel-preset-react"
-              ])
+              ...babelrc
             }
           }
         ]

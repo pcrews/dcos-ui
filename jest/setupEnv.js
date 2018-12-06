@@ -1,4 +1,4 @@
-require("babel-polyfill");
+require("@babel/polyfill");
 require("reflect-metadata");
 var EventEmitter = require("events").EventEmitter;
 

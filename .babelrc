@@ -1,5 +1,16 @@
 {
-  "plugins": ["transform-runtime", "macros"],
-  "presets": ["es2015", "stage-3", "react"]
+  "plugins": [
+    "@babel/plugin-transform-runtime",
+    "@babel/plugin-syntax-dynamic-import",
+    ["@babel/plugin-proposal-class-properties", { "loose": false }],
+    "@babel/plugin-syntax-import-meta",
+    "@babel/plugin-proposal-json-strings",
+    "macros"
+  ],
+  "presets": [
+    ["@babel/preset-env", { "modules": "commonjs"}],
+    "@babel/preset-react",
+    "@babel/preset-typescript"
+  ]
 }
 

@@ -8,8 +8,8 @@ import { Router, hashHistory } from "react-router";
 import { Provider } from "react-redux";
 import PluginSDK from "PluginSDK";
 
-import en from "#LOCALE/en/messages.js";
-import zh from "#LOCALE/zh/messages.js";
+import en from "#LOCALE/en/messages";
+import zh from "#LOCALE/zh/messages";
 
 // Load in our CSS.
 // TODO - DCOS-6452 - remove component @imports from index.less and

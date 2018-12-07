@@ -6,7 +6,7 @@ const renderer = require("react-test-renderer");
 
 const PlacementConstraintsSchemaFields = require("../PlacementConstraintsSchemaField")
   .default;
-const PlacementValidators = require("#PLUGINS/services/src/js/validators/PlacementsValidators.js");
+const PlacementValidators = require("#PLUGINS/services/src/js/validators/PlacementsValidators");
 
 let thisValidateNoBatchErrorRestore, thisInstance;
 

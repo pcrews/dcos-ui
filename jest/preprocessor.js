@@ -1,7 +1,10 @@
 var babel = require("babel-core");
-var jestPreset = require("babel-preset-jest");
+var babelJest = require("babel-jest");
+require("@babel/register");
 var jison = require("jison");
+var path = require("path");
 var webpackAlias = require("jest-webpack-alias");
+
 const tsc = require("typescript");
 const tsConfig = require("../tsconfig.json");
 
@@ -19,38 +22,39 @@ module.exports = {
       if (filename.match(/\.(jpe?g|png|gif|bmp|svg|less|raml)$/i)) {
         return "";
       }
+      if (filename.endsWith(".ts") || filename.endsWith(".tsx")) {
+        src = tsc.transpile(src, tsConfig.compilerOptions, filename, []);
+      }
       // Use JISON generator for JISON grammar
       if (isJISON) {
         src = new jison.Generator(src).generate();
       }
-      if (filename.endsWith(".ts") || filename.endsWith(".tsx")) {
-        src = tsc.transpile(src, tsConfig.compilerOptions, filename, []);
-      }
       // Run our modules through Babel before running tests
       if (
-        babel.util.canCompile(filename) ||
         isJISON ||
         filename.endsWith(".ts") ||
-        filename.endsWith(".tsx")
+        filename.endsWith(".tsx") ||
+        babel.DEFAULT_EXTENSIONS.indexOf(path.extname(filename)) !== -1
       ) {
         src = babel.transform(src, {
           auxiliaryCommentBefore: " istanbul ignore next ",
           filename,
-          presets: [jestPreset].concat(
-            [
-              "babel-preset-es2015",
-              "babel-preset-stage-3",
-              "babel-preset-react"
-            ].map(require.resolve)
-          ),
+          plugins: [
+            "@babel/plugin-transform-runtime",
+            "@babel/plugin-syntax-dynamic-import",
+            ["@babel/plugin-proposal-class-properties", { "loose": false }],
+            "@babel/plugin-syntax-import-meta",
+            "@babel/plugin-proposal-json-strings",
+            "macros"
+          ],
+          presets: [
+            ["@babel/preset-env", { "modules": "commonjs"}],
+            "@babel/preset-react",
+            "@babel/preset-typescript"
+          ],
           retainLines: true
         }).code;
       }
-      // Run our modules through the jest-webpack-alias plugin so we
-      // can use the webpack alias in tests. By default, jest doesn't work
-      // with webpack at all. webPackAlias matches filenames against the
-      // alias settings in webpack.config and rewrites the filename to the
-      // aliased path.
       src = webpackAlias.process(src, filename);
     }
 

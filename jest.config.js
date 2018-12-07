@@ -49,7 +49,6 @@ module.exports = {
   },
   // TODO: split up transforms
   transform: {
-    "^.+\\.tsx?$": "ts-jest",
     ".*": "./jest/preprocessor.js"
   },
   setupTestFrameworkScriptFile: "./jest/setupTestFramework.js",
@@ -57,11 +56,14 @@ module.exports = {
   testRegex: "/__tests__/.*\\-test\\.(es6|js|ts)$",
   moduleFileExtensions: ["js", "json", "es6", "ts", "tsx"],
   modulePathIgnorePatterns: ["/tmp/", "/node_modules/", "/.module-cache/"],
-  moduleNameMapper: {
-    "#SRC/([^\\.]*)$": "<rootDir>/src/$1",
-    "#PLUGINS/([^\\.]*)$": "<rootDir>/plugins/$1",
-    "#EXTERNAL_PLUGINS/([^\\.]*)$": "<rootDir>/../dcos-ui-plugins-private/$1"
-  },
+  // moduleNameMapper: {
+  //   PluginSDK: "<rootDir>/src/js/plugin-bridge/PluginSDK",
+  //   PluginTestUtils: "<rootDir>/src/js/plugin-bridge/PluginTestUtils",
+  //   "#SRC/([^\\.]*)$": "<rootDir>/src/$1",
+  //   "#PLUGINS/([^\\.]*)$": "<rootDir>/plugins/$1",
+  //   "#EXTERNAL_PLUGINS/([^\\.]*)$": "<rootDir>/../dcos-ui-plugins-private/$1",
+  //   "#LOCALE": "<rootDir>/locale/$1"
+  // },
   timers: "fake",
   coverageReporters: ["json", "lcov", "cobertura", "text"],
   testPathIgnorePatterns: ["/tmp/", "/node_modules/"]

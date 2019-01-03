@@ -75,7 +75,7 @@ export default class Page extends mixin(InternalStorageMixin, StoreMixin) {
 
   onSidebarStoreWidthChange() {
     ScrollbarUtil.updateWithRef(this.geminiRef);
-  },
+  }
 
   getChildren() {
     var data = this.internalStorage_get();

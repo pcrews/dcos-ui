@@ -2,8 +2,8 @@ import { Trans } from "@lingui/macro";
 import { i18nMark } from "@lingui/react";
 import classNames from "classnames";
 import React from "react";
-import createReactClass from "create-react-class";
 import { Link, routerShape } from "react-router";
+import mixin from "reactjs-mixin";
 import { StoreMixin } from "mesosphere-shared-reactjs";
 
 import AlertPanel from "#SRC/js/components/AlertPanel";
@@ -56,37 +56,37 @@ function getMesosHosts(state) {
   };
 }
 
-var DEFAULT_FILTER_OPTIONS = {
+const DEFAULT_FILTER_OPTIONS = {
   filterExpression: new DSLExpression("")
 };
 
-var NodesAgents = createReactClass({
-  displayName: "NodesAgents",
+const METHODS_TO_BIND = [
+  "getContents",
+  "getButtonContent",
+  "handleByServiceFilterChange",
+  "handleHealthFilterChange",
+  "resetFilter",
+  "onResourceSelectionChange",
+  "getViewTypeRadioButtons",
+  "getHostsPageContent",
+  "getEmptyHostsPageContent",
+  "onMesosStateChange"
+];
 
-  mixins: [InternalStorageMixin, QueryParamsMixin, StoreMixin],
+class NodesAgents extends mixin(
+  InternalStorageMixin,
+  QueryParamsMixin,
+  StoreMixin
+) {
+  constructor() {
+    super(...arguments);
 
-  statics: {
-    routeConfig: {
-      label: i18nMark("Nodes"),
-      icon: <Icon family="product" id="servers-inverse" />,
-      matches: /^\/nodes/
-    },
-    // Static life cycle method from react router, that will be called
-    // 'when a handler is about to render', i.e. on route change:
-    // https://github.com/rackt/react-router/
-    // blob/master/docs/api/components/RouteHandler.md
-    willTransitionTo() {
-      SidebarActions.close();
-    }
-  },
+    this.state = { selectedResource: "cpus", ...DEFAULT_FILTER_OPTIONS };
 
-  contextTypes: {
-    router: routerShape.isRequired
-  },
-
-  getInitialState() {
-    return Object.assign({ selectedResource: "cpus" }, DEFAULT_FILTER_OPTIONS);
-  },
+    METHODS_TO_BIND.forEach(method => {
+      this[method] = this[method].bind(this);
+    });
+  }
 
   componentWillMount() {
     this.internalStorage_set(getMesosHosts(this.state));
@@ -101,7 +101,7 @@ var NodesAgents = createReactClass({
         events: ["success", "error"]
       }
     ];
-  },
+  }
 
   componentDidMount() {
     MesosSummaryStore.addChangeListener(
@@ -118,14 +118,14 @@ var NodesAgents = createReactClass({
       openNodePanel: this.props.params.nodeID != null,
       openTaskPanel: this.props.params.taskID != null
     });
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     this.internalStorage_update({
       openNodePanel: nextProps.params.nodeID != null,
       openTaskPanel: nextProps.params.taskID != null
     });
-  },
+  }
 
   componentWillUnmount() {
     MesosSummaryStore.removeChangeListener(
@@ -137,12 +137,12 @@ var NodesAgents = createReactClass({
       EventTypes.MESOS_SUMMARY_REQUEST_ERROR,
       this.onMesosStateChange
     );
-  },
+  }
 
   onMesosStateChange() {
     this.internalStorage_update(getMesosHosts(this.state));
     this.forceUpdate();
-  },
+  }
 
   resetFilter() {
     const state = Object.assign({}, DEFAULT_FILTER_OPTIONS);
@@ -151,7 +151,7 @@ var NodesAgents = createReactClass({
     this.internalStorage_update(getMesosHosts(state));
 
     this.resetQueryParams(["searchString", "filterExpression"]);
-  },
+  }
 
   handleSearchStringChange(searchString = "") {
     var stateChanges = Object.assign({}, this.state, {
@@ -161,7 +161,7 @@ var NodesAgents = createReactClass({
     this.internalStorage_update(getMesosHosts(stateChanges));
     this.setState({ searchString });
     this.setQueryParam("searchString", searchString);
-  },
+  }
 
   handleByServiceFilterChange(byServiceFilter) {
     if (byServiceFilter === "") {
@@ -175,19 +175,19 @@ var NodesAgents = createReactClass({
     this.internalStorage_update(getMesosHosts(stateChanges));
     this.setState({ byServiceFilter });
     this.setQueryParam("filterService", byServiceFilter);
-  },
+  }
 
   handleHealthFilterChange(filterExpression, filters) {
     this.internalStorage_update(getMesosHosts({ filterExpression, filters }));
     this.setState({ filterExpression, filters });
     this.setQueryParam("filterExpression", filterExpression.value);
-  },
+  }
 
   onResourceSelectionChange(selectedResource) {
     if (this.state.selectedResource !== selectedResource) {
       this.setState({ selectedResource });
     }
-  },
+  }
 
   getButtonContent(filterName, count) {
     const dotClassSet = classNames({
@@ -205,7 +205,7 @@ var NodesAgents = createReactClass({
         <Badge>{count || 0}</Badge>
       </span>
     );
-  },
+  }
 
   getViewTypeRadioButtons(resetFilter) {
     const isGridActive = /\/nodes\/agents\/grid\/?/i.test(
@@ -240,7 +240,7 @@ var NodesAgents = createReactClass({
         </Link>
       </div>
     );
-  },
+  }
 
   getHostsPageContent() {
     const { filterExpression, byServiceFilter, selectedResource } = this.state;
@@ -293,7 +293,7 @@ var NodesAgents = createReactClass({
         </HostsPageContent>
       </Page>
     );
-  },
+  }
 
   getEmptyHostsPageContent() {
     return (
@@ -309,7 +309,7 @@ var NodesAgents = createReactClass({
         </AlertPanel>
       </Page>
     );
-  },
+  }
 
   getContents(isEmpty) {
     if (isEmpty) {
@@ -317,7 +317,7 @@ var NodesAgents = createReactClass({
     } else {
       return this.getHostsPageContent();
     }
-  },
+  }
 
   render() {
     var data = this.internalStorage_get();
@@ -326,6 +326,26 @@ var NodesAgents = createReactClass({
 
     return this.getContents(isEmpty);
   }
-});
+}
+
+NodesAgents.displayName = "NodesAgents";
+
+NodesAgents.routeConfig = {
+  label: i18nMark("Nodes"),
+  icon: <Icon family="product" id="servers-inverse" />,
+  matches: /^\/nodes/
+};
+
+// Static life cycle method from react router, that will be called
+// 'when a handler is about to render', i.e. on route change:
+// https://github.com/rackt/react-router/
+// blob/master/docs/api/components/RouteHandler.md
+NodesAgents.willTransitionTo = () => {
+  SidebarActions.close();
+};
+
+NodesAgents.contextTypes = {
+  router: routerShape.isRequired
+};
 
 module.exports = NodesAgents;

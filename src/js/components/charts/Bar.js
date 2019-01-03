@@ -1,24 +1,12 @@
 import d3 from "d3";
 import PropTypes from "prop-types";
 import React from "react";
-import createReactClass from "create-react-class";
 import ReactDOM from "react-dom";
 
-var Bar = createReactClass({
-  displayName: "Bar",
-
-  propTypes: {
-    posX: PropTypes.number.isRequired,
-    posY: PropTypes.number.isRequired,
-    rectHeight: PropTypes.number.isRequired,
-    rectWidth: PropTypes.number.isRequired,
-    colorClass: PropTypes.string.isRequired,
-    lineClass: PropTypes.string.isRequired
-  },
-
+class Bar extends React.Component {
   componentDidMount() {
     this.animate(this.props);
-  },
+  }
 
   componentWillUpdate() {
     if (!this.props.transitionDelay && !this.props.transitionDuration) {
@@ -33,16 +21,17 @@ var Bar = createReactClass({
       .transition()
       .duration(0)
       .attr("transform", "translate(" + this.props.posX + ")");
-  },
+  }
 
   componentDidUpdate(props) {
     this.animate(props);
-  },
+  }
 
   animate(props) {
     if (!props.transitionDelay && !props.transitionDuration) {
       return;
     }
+
     const el = ReactDOM.findDOMNode(this);
     d3.select(el)
       .interrupt()
@@ -51,7 +40,7 @@ var Bar = createReactClass({
       .duration(props.transitionDuration)
       .ease("linear")
       .attr("transform", "translate(" + (props.posX - props.rectWidth) + ")");
-  },
+  }
 
   render() {
     var props = this.props;
@@ -79,6 +68,17 @@ var Bar = createReactClass({
       </g>
     );
   }
-});
+}
+
+Bar.displayName = "Bar";
+
+Bar.propTypes = {
+  posX: PropTypes.number.isRequired,
+  posY: PropTypes.number.isRequired,
+  rectHeight: PropTypes.number.isRequired,
+  rectWidth: PropTypes.number.isRequired,
+  colorClass: PropTypes.string.isRequired,
+  lineClass: PropTypes.string.isRequired
+};
 
 module.exports = Bar;

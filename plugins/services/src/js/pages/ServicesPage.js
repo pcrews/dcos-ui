@@ -1,8 +1,8 @@
 import { i18nMark } from "@lingui/react";
 import React from "react";
-import createReactClass from "create-react-class";
 import { routerShape } from "react-router";
 import { StoreMixin } from "mesosphere-shared-reactjs";
+import mixin from "reactjs-mixin";
 
 import Icon from "#SRC/js/components/Icon";
 import RouterUtil from "#SRC/js/utils/RouterUtil";
@@ -10,28 +10,14 @@ import TabsMixin from "#SRC/js/mixins/TabsMixin";
 
 import CosmosPackagesStore from "#SRC/js/stores/CosmosPackagesStore";
 
-var ServicesPage = createReactClass({
-  contextTypes: {
-    router: routerShape
-  },
+class ServicesPage extends mixin(TabsMixin, StoreMixin) {
+  constructor() {
+    super(...arguments);
 
-  mixins: [TabsMixin, StoreMixin],
-
-  displayName: "ServicesPage",
-
-  statics: {
-    routeConfig: {
-      label: i18nMark("Services"),
-      icon: <Icon id="services-inverse" size="small" family="product" />,
-      matches: /^\/services/
-    }
-  },
-
-  getInitialState() {
-    return {
+    this.state = {
       currentTab: "/services/overview"
     };
-  },
+  }
 
   componentWillMount() {
     this.store_listeners = [
@@ -41,15 +27,15 @@ var ServicesPage = createReactClass({
       "/services/overview": i18nMark("Services")
     };
     this.updateCurrentTab();
-  },
+  }
 
   componentDidMount() {
     CosmosPackagesStore.fetchAvailablePackages();
-  },
+  }
 
   componentDidUpdate() {
     this.updateCurrentTab();
-  },
+  }
 
   updateCurrentTab() {
     let currentTab = RouterUtil.reconstructPathFromRoutes(this.props.routes);
@@ -66,7 +52,7 @@ var ServicesPage = createReactClass({
     if (this.state.currentTab !== currentTab) {
       this.setState({ currentTab });
     }
-  },
+  }
 
   getNavigation() {
     if (RouterUtil.shouldHideNavigation(this.props.routes)) {
@@ -74,11 +60,23 @@ var ServicesPage = createReactClass({
     }
 
     return <ul className="menu-tabbed">{this.tabs_getRoutedTabs()}</ul>;
-  },
+  }
 
   render() {
     return this.props.children;
   }
-});
+}
+
+ServicesPage.contextTypes = {
+  router: routerShape
+};
+
+ServicesPage.displayName = "ServicesPage";
+
+ServicesPage.routeConfig = {
+  label: i18nMark("Services"),
+  icon: <Icon id="services-inverse" size="small" family="product" />,
+  matches: /^\/services/
+};
 
 module.exports = ServicesPage;

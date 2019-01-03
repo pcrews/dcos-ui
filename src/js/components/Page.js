@@ -1,7 +1,7 @@
 import classNames from "classnames/dedupe";
 import PropTypes from "prop-types";
 import React from "react";
-import createReactClass from "create-react-class";
+import mixin from "reactjs-mixin";
 import { StoreMixin } from "mesosphere-shared-reactjs";
 
 import { MountService } from "foundation-ui";
@@ -55,23 +55,8 @@ PageHeader.propTypes = {
   disabledActions: PropTypes.bool
 };
 
-const Page = createReactClass({
-  displayName: "Page",
-
-  mixins: [InternalStorageMixin, StoreMixin],
-
-  propTypes: {
-    className: PropTypes.oneOfType([
-      PropTypes.array,
-      PropTypes.object,
-      PropTypes.string
-    ]),
-    dontScroll: PropTypes.bool,
-    flushBottom: PropTypes.bool,
-    navigation: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
-    title: PropTypes.oneOfType([PropTypes.object, PropTypes.string])
-  },
-
+export const Header = PageHeader;
+export default class Page extends mixin(InternalStorageMixin, StoreMixin) {
   componentWillMount() {
     this.store_listeners = [
       {
@@ -79,14 +64,14 @@ const Page = createReactClass({
         events: ["widthChange"]
       }
     ];
-  },
+  }
 
   componentDidMount() {
     this.internalStorage_set({
       rendered: true
     });
     this.forceUpdate();
-  },
+  }
 
   onSidebarStoreWidthChange() {
     ScrollbarUtil.updateWithRef(this.geminiRef);
@@ -103,7 +88,7 @@ const Page = createReactClass({
     }
 
     return null;
-  },
+  }
 
   getNavigation(navigation) {
     if (!navigation) {
@@ -111,14 +96,14 @@ const Page = createReactClass({
     }
 
     return <div className="page-header-navigation">{navigation}</div>;
-  },
+  }
 
   getPageHeader() {
     return TemplateUtil.getChildOfType(
       this.props.children,
       this.constructor.Header
     );
-  },
+  }
 
   getContent() {
     const { dontScroll, flushBottom } = this.props;
@@ -148,10 +133,10 @@ const Page = createReactClass({
         {content}
       </FluidGeminiScrollbar>
     );
-  },
+  }
 
   render() {
-    const { className, navigation, dontScroll, title } = this.props;
+    const { className, dontScroll } = this.props;
 
     const classSet = classNames(
       "page flex flex-direction-top-to-bottom flex-item-grow-1",
@@ -164,14 +149,25 @@ const Page = createReactClass({
     return (
       <div className={classSet}>
         <MountService.Mount type="Page:TopBanner" />
-        {this.getPageHeader(title, navigation)}
+        {this.getPageHeader()}
         {this.getContent()}
       </div>
     );
   }
-});
+}
 
 TemplateUtil.defineChildren(Page, { Header: PageHeader });
 
-export default Page;
-export const Header = PageHeader;
+Page.displayName = "Page";
+
+Page.propTypes = {
+  className: PropTypes.oneOfType([
+    PropTypes.array,
+    PropTypes.object,
+    PropTypes.string
+  ]),
+  dontScroll: PropTypes.bool,
+  flushBottom: PropTypes.bool,
+  navigation: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
+  title: PropTypes.oneOfType([PropTypes.object, PropTypes.string])
+};

@@ -1,6 +1,24 @@
 {
-  "branch": "master",
+  "branch": "jgieseke/sr-test",
   "tagFormat": "master+v${version}",
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "angular",
+        "releaseRules": [
+          { "type": "chore", "release": "patch" },
+          { "type": "refactor", "release": "patch" },
+          { "type": "*", "release": "prepatch" }
+        ],
+        "parserOpts": {
+          "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+        }
+      }
+    ],
+    "@semantic-release/github",
+    "semantic-release-jira"
+  ],
   "verifyConditions": ["@semantic-release/github", "semantic-release-jira"],
   "prepare": [],
   "publish": [
@@ -16,7 +34,8 @@
     {
       "path": "semantic-release-jira",
       "apiURL": "https://jira.mesosphere.com/rest/api/2/issue/${issueKey}",
-      "apiJSON": '{ "update": { "labels": [ { "add": "released-repo:dcos-ui" }, { "add": "released-tag:master+v${version}" } ] } }'
+      "apiJSON":
+        "{ \"update\": { \"labels\": [ { \"add\": \"released-repo:dcos-ui\" }, { \"add\": \"released-tag:master+v${version}\" } ] } }"
     }
   ]
 }

@@ -48,7 +48,12 @@ class ServiceDestroyModal extends React.PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
+    const { i18n } = this.props;
     const { errors } = nextProps;
+    const defaultErrorMsg = i18n._(
+      t`The delete action failed. Please try again.`
+    );
+
     if (!errors) {
       this.setState({ errorMsg: null });
 
@@ -61,7 +66,7 @@ class ServiceDestroyModal extends React.PureComponent {
       return;
     }
 
-    let { message: errorMsg = "", details } = errors;
+    let { message: errorMsg = defaultErrorMsg, details } = errors;
     const hasDetails = details && details.length !== 0;
 
     if (hasDetails) {
@@ -122,7 +127,9 @@ class ServiceDestroyModal extends React.PureComponent {
     }
 
     return (
-      <h4 className="text-align-center text-danger flush-top">{errorMsg}</h4>
+      <Trans render="h4" className="text-align-center text-danger flush-bottom">
+        {errorMsg}
+      </Trans>
     );
   }
 

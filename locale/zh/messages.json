@@ -857,6 +857,7 @@
   "The connection to the LDAP server was successful, but credentials were invalid.": "与 LDAP 服务器的连接成功，但凭据无效。",
   "The container runtime is responsible for running your service. We support the Docker Engine and Universal Container Runtime (UCR).": "容器运行时负责运行您的服务。我们支持 Docker 引擎和通用容器运行时 (UCR)。",
   "The contents of this secret store cannot be accessed until it is unsealed. See <0>instructions</0> on how to access sealed secret stores.": "无法访问该密钥存储库的内容，直到解封为止。参见 <0>有关</0> 如何访问密封密钥存储库的说明。",
+  "The delete action failed. Please try again.": "",
   "The disk space offered": "已提供磁盘空间",
   "The input entered is not a valid JSON string": "所输入的不是有效的 JSON 字符串",
   "The key cannot be empty.": "密钥不能为空。",

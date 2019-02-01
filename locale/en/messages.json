@@ -857,6 +857,7 @@
   "The connection to the LDAP server was successful, but credentials were invalid.": "",
   "The container runtime is responsible for running your service. We support the Docker Engine and Universal Container Runtime (UCR).": "",
   "The contents of this secret store cannot be accessed until it is unsealed. See <0>instructions</0> on how to access sealed secret stores.": "",
+  "The delete action failed. Please try again.": "",
   "The disk space offered": "",
   "The input entered is not a valid JSON string": "",
   "The key cannot be empty.": "",

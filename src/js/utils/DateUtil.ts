@@ -138,6 +138,15 @@ const DateUtil = {
     formatKey: moment.DurationInputArg2 = "seconds"
   ): string {
     return moment.duration(time, formatKey).humanize();
+  },
+
+  isValidDate(dateString: string) {
+    if (dateString === null) {
+      return false;
+    }
+
+    const date: Date = new Date(dateString);
+    return date instanceof Date && !isNaN(date);
   }
 };
 

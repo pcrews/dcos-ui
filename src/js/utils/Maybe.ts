@@ -1,5 +1,12 @@
 /*
-  `Maybe` can help you with optional arguments, error handling, and records with optional fields.
+  `Maybe` can help you with optional arguments, error handling, and records
+  with optional fields.
+
+  N.B. we're not using a curried last-arg-style, as typescript is not yet able
+  to infer the types for generic type variables then. Instead it actually lies
+  about the type to be infered being "{}". See
+  https://github.com/Microsoft/TypeScript/issues/9366 and
+  https://github.com/Microsoft/TypeScript/pull/24626.
 */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,12 +30,12 @@
 type Maybe<Value> = Just<Value> | Nothing;
 
 interface Nothing {
-  tag: "Nothing";
+  readonly tag: "Nothing";
 }
 
 interface Just<T> {
-  tag: "Just";
-  value: T;
+  readonly tag: "Just";
+  readonly value: T;
 }
 
 const Just = <Value>(value: Value): Maybe<Value> => ({ tag: "Just", value });
@@ -54,12 +61,13 @@ const fromValue: fromValue = value =>
 /*
   Transform a `Maybe` value with a given function:
 
-      Maybe.map(Math.sqrt)(Just(9)) === Just(3)
-      Maybe.map(string => string.length)(Just("hallo")) === Just(5)
+      Maybe.map(Just(9), Math.sqrt) === Just(3)
+      Maybe.map(Just("hallo"), string => string.length) === Just(5)
 
 */
-type map = <A, B>(fn: (value: A) => B) => (maybe: Maybe<A>) => Maybe<B>;
-const map: map = fn => maybe => {
+
+type map = <A, B>(maybe: Maybe<A>, fn: (value: A) => B) => Maybe<B>;
+const map: map = (maybe, fn) => {
   switch (maybe.tag) {
     case "Just":
       return Just(fn(maybe.value));
@@ -72,20 +80,46 @@ const map: map = fn => maybe => {
   Provide a default value, turning an optional value into a normal
   value.
 
-      function ageInWords(person: Person): string {
-        const maybeText : Maybe<string> = Maybe.map(age => `is ${age} years old`)
+      import { pipe } from "rxjs"
 
-        return Maybe.withDefault("unknown")(maybeText)
+      const ageInWords: (age: Maybe<number>) => string =
+        pipe(
+          _ => Maybe.map(_, age => `is ${age} years old`),
+          _ => Maybe.withDefault(_, "unknown")
+        )
       }
 
 */
-type withDefault = <V>(defaultValue: V) => (maybe: Maybe<V>) => V;
-const withDefault: withDefault = defaultValue => maybe => {
+type withDefault = <A>(maybe: Maybe<A>, defaultValue: A) => A;
+const withDefault: withDefault = (maybe, defaultValue) => {
   switch (maybe.tag) {
     case "Just":
       return maybe.value;
+
     case "Nothing":
       return defaultValue;
+  }
+};
+
+/*
+  A convenience function to fold (or unpack) a Maybe.
+
+      Maybe.fold(person.age, {
+        Just: x =>
+          <Person age={x} />
+        Nothing:
+          <FillYourProfileNag />
+      })
+
+*/
+type fold = <A, R>(maybe: Maybe<A>, o: { Just: (a: A) => R; Nothing: R }) => R;
+const fold: fold = (maybe, { Just: onJust, Nothing: onNothing }) => {
+  switch (maybe.tag) {
+    case "Just":
+      return onJust(maybe.value);
+
+    case "Nothing":
+      return onNothing;
   }
 };
 
@@ -93,7 +127,7 @@ const withDefault: withDefault = defaultValue => maybe => {
   Chain together computations that may fail. It is helpful to see its
   definition:
 
-      const andThen: andThen = callback => maybe => {
+      const andThen: andThen = (maybe, callback) => {
         switch (maybe.tag) {
           case "Just":    return callback(maybe.value);
           case "Nothing": return Nothing;
@@ -114,20 +148,20 @@ const withDefault: withDefault = defaultValue => maybe => {
         return value ? Just(value) : Nothing
       }
 
-      // let's use `pipe` from utils/pipe.js to better see what's going on.
-      const computeFinalValue = pipe(
-        Maybe.andThen(getIndex(arrayOne))
-        Maybe.andThen(getIndex(arrayTwo))
-        Maybe.andThen(getIndex(arrayThree))
+      import { pipe } from 'rxjs'
+      const computeValue = pipe(
+        _ => Maybe.andThen(_, getIndex(arrayOne)),
+        _ => Maybe.andThen(_, getIndex(arrayTwo)),
+        _ => Maybe.andThen(_, getIndex(arrayThree))
       )
 
-      console.log(computeFinalValue(Just(1))) // => Just 42
+      console.log(computeValue(Just(1))) // => Just 42
           // it is given Just(1)
           // andThen it retrieves the 1st index of arrayOne => 0
           // andThen it retrieves the 0th index of arrayTwo => 0
           // andThen it retrieves the 0th index of arrayThree => 42
 
-      console.log(computeFinalValue(Just(0))) // => Nothing
+      console.log(computeValue(Just(0))) // => Nothing
           // it is given Just(0)
           // andThen it retrieves the 0th index of arrayOne => 2
           // andThen it retrieves the 1st index of arrayTwo => Nothing
@@ -137,8 +171,8 @@ const withDefault: withDefault = defaultValue => maybe => {
   result `Nothing`. This may come in handy if we wanted to skip e.g. some
   network requests.
 */
-type andThen = <A, B>(fn: (v: A) => Maybe<B>) => (maybe: Maybe<A>) => Maybe<B>;
-const andThen: andThen = callback => maybe => {
+type andThen = <A, B>(maybe: Maybe<A>, fn: (v: A) => Maybe<B>) => Maybe<B>;
+const andThen: andThen = (maybe, callback) => {
   switch (maybe.tag) {
     case "Just":
       return callback(maybe.value);
@@ -151,8 +185,9 @@ const andThen: andThen = callback => maybe => {
 // so application code is nudged to use the functions fully qualified.
 const Maybe = {
   andThen,
+  fold,
   fromValue,
   map,
   withDefault
 };
-export { Just, Nothing, Maybe as default };
+export { Just, Nothing, Maybe };

@@ -195,9 +195,9 @@
     "webpack-notifier": "1.5.1"
   },
   "scripts": {
-    "check-env": "./scripts/validate-engine-versions",
+    "check-env": "node ./scripts/validate-engine-versions.js",
     "clean": "rm -rf dist locale/_build",
-    "preinstall": "./scripts/pre-install",
+    "preinstall": "npm run check-env && ./scripts/pre-install",
     "postinstall": "npm run scaffold",
     "prebuild-assets": "node ./scripts/checkDependencies.js",
     "build-assets": "npm run clean && lingui compile && NODE_ENV=production webpack --colors --config ./webpack/webpack.production.js",

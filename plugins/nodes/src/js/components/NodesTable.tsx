@@ -39,6 +39,7 @@ interface NodesTableState {
   data: Node[];
   sortDirection: SortDirection;
   sortColumn: string;
+  initialLoading: boolean;
 }
 
 type SortFunction<T> = (data: T[], sortDirection: SortDirection) => T[];
@@ -56,7 +57,8 @@ export default class NodesTable extends React.Component<
     this.state = {
       data: [],
       sortColumn: "health",
-      sortDirection: "ASC"
+      sortDirection: "ASC",
+      initialLoading: true
     };
 
     this.handleSortClick = this.handleSortClick.bind(this);
@@ -99,19 +101,33 @@ export default class NodesTable extends React.Component<
     currentSortColumn?: string
   ): NodesTableState {
     const copiedData = data.slice();
+    let initialLoading = this.state.initialLoading;
+    if (initialLoading && data.length > 0) {
+      initialLoading = false;
+    }
 
     if (
       sortDirection === currentSortDirection &&
       sortColumn === currentSortColumn
     ) {
-      return { data: copiedData, sortDirection, sortColumn };
+      return {
+        data: copiedData,
+        sortDirection,
+        sortColumn,
+        initialLoading
+      };
     }
 
     if (
       sortDirection !== currentSortDirection &&
       sortColumn === currentSortColumn
     ) {
-      return { data: copiedData.reverse(), sortDirection, sortColumn };
+      return {
+        data: copiedData.reverse(),
+        sortDirection,
+        sortColumn,
+        initialLoading
+      };
     }
 
     const sortFunction = this.retrieveSortFunction(sortColumn);
@@ -119,7 +135,8 @@ export default class NodesTable extends React.Component<
     return {
       data: sortFunction(copiedData, sortDirection),
       sortDirection,
-      sortColumn
+      sortColumn,
+      initialLoading
     };
   }
 
@@ -151,9 +168,9 @@ export default class NodesTable extends React.Component<
   }
 
   render() {
-    const { data, sortColumn, sortDirection } = this.state;
+    const { data, sortColumn, sortDirection, initialLoading } = this.state;
 
-    if (data.length === 0) {
+    if (initialLoading && data.length === 0) {
       return <Loader />;
     }
 

@@ -25,6 +25,7 @@ import {
 } from "./form/helpers/JobFormData";
 import GeneralFormSection from "./form/GeneralFormSection";
 import ContainerFormSection from "./form/ContainerFormSection";
+import RunConfigFormSection from "./form/RunConfigFormSection";
 import {
   jobSpecToOutputParser,
   jobSpecToFormOutputParser
@@ -54,7 +55,8 @@ interface NavigationItem {
 class JobModalForm extends React.Component<JobFormProps> {
   static navigationItems: NavigationItem[] = [
     { id: "general", key: "general", label: i18nMark("General") },
-    { id: "container", key: "container", label: i18nMark("Container") }
+    { id: "container", key: "container", label: i18nMark("Container") },
+    { id: "run_config", key: "runConfig", label: i18nMark("Run Config") }
   ];
 
   static tabList = JobModalForm.navigationItems.map(item => (
@@ -89,16 +91,15 @@ class JobModalForm extends React.Component<JobFormProps> {
     return jobJSON;
   }
 
-  onInputChange(event: any) {
-    const { onChange } = this.props;
-    const { value, name, type } = event.target;
-    const action = {
-      type:
-        type === "number" ? JobFormActionType.SetNum : JobFormActionType.Set,
-      value,
-      path: name
-    };
-    onChange(action);
+  onInputChange({ target: { value, name, type, dataset } }: any) {
+    const actionType =
+      type === "number"
+        ? JobFormActionType.SetNum
+        : dataset.parser === "boolean"
+          ? JobFormActionType.SetBool
+          : JobFormActionType.Set;
+
+    this.props.onChange({ type: actionType, value, path: name });
   }
 
   handleJSONChange(jobJSON: JobOutput) {
@@ -113,10 +114,6 @@ class JobModalForm extends React.Component<JobFormProps> {
     this.props.onErrorsChange(
       errorMessage === null ? [] : [{ message: errorMessage, path: [] }]
     );
-  }
-
-  handleClickItem(item: string) {
-    this.props.handleTabChange(item);
   }
 
   handleAddItem(path: string) {
@@ -205,6 +202,20 @@ class JobModalForm extends React.Component<JobFormProps> {
                       <ContainerFormSection
                         formData={formOutput}
                         errors={translatedErrors}
+                        showErrors={showAllErrors}
+                        onAddItem={this.handleAddItem}
+                        onRemoveItem={this.handleRemoveItem}
+                      />
+                    </TabView>
+                    <TabView id="run_config">
+                      <ErrorsAlert
+                        errors={errors}
+                        pathMapping={ServiceErrorPathMapping}
+                        hideTopLevelErrors={!showAllErrors}
+                      />
+                      <RunConfigFormSection
+                        formData={formOutput}
+                        errors={errors}
                         showErrors={showAllErrors}
                         onAddItem={this.handleAddItem}
                         onRemoveItem={this.handleRemoveItem}

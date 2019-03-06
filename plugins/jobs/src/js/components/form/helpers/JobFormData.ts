@@ -46,6 +46,13 @@ export interface FormOutput {
   disk: number;
   dockerParams: DockerParameter[];
   args: string[];
+  maxLaunchDelay?: number;
+  killGracePeriod?: number;
+  user?: string;
+  restartJob?: boolean;
+  retryTime?: number;
+  labels?: JobLabels;
+  artifacts?: JobArtifact[];
 }
 
 export interface JobOutput {
@@ -53,9 +60,7 @@ export interface JobOutput {
   schedule?: JobSchedule;
 }
 
-export interface JobLabels {
-  [key: string]: string;
-}
+export type JobLabels = Array<[string, string]>;
 
 export interface JobRun {
   args?: string[];
@@ -73,7 +78,10 @@ export interface JobRun {
   user?: string;
   taskKillGracePeriodSeconds?: number;
   restart?: JobRestart;
+  activeDeadlineSeconds?: number;
   volumes?: Array<JobVolume | SecretVolume>;
+  restartJob?: boolean;
+  retryTime?: number;
   secrets?: {
     [key: string]: FileBasedSecret;
   };
@@ -176,6 +184,7 @@ export interface FormError {
 export enum JobFormActionType {
   Set = "SET",
   SetNum = "SET_NUM",
+  SetBool = "SET_BOOL",
   Override = "OVERRIDE",
   AddArrayItem = "ADD_ARRAY_ITEM",
   RemoveArrayItem = "REMOVE_ARRAY_ITEM"

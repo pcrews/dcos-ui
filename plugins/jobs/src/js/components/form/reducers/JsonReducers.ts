@@ -4,7 +4,8 @@ import {
   JobSpec,
   JobOutput,
   JobFormActionType,
-  Container
+  Container,
+  RestartPolicy
 } from "../helpers/JobFormData";
 
 export const jsonReducers = {
@@ -36,6 +37,16 @@ export const jsonReducers = {
         schedule: valueCopy.schedule
       };
       return newState;
+    }
+
+    valueCopy.job.labels = Object.entries(valueCopy.job.labels);
+    if (valueCopy.job.run.restart) {
+      valueCopy.job.run.restartJob =
+        valueCopy.job.run.restart.policy === RestartPolicy.OnFailure;
+      valueCopy.job.run.retryTime = parseInt(
+        valueCopy.job.run.restart.activeDeadlineSeconds,
+        10
+      );
     }
 
     const cmdOnly = !(valueCopy.job.run.docker || valueCopy.job.run.ucr);

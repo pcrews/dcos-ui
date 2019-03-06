@@ -138,7 +138,12 @@ module.exports = class Framework extends Application {
    * @override
    */
   getWebURL() {
-    const { DCOS_SERVICE_NAME, DCOS_SERVICE_PORT_INDEX, DCOS_SERVICE_SCHEME } =
+    const {
+      DCOS_SERVICE_NAME,
+      DCOS_SERVICE_PORT_INDEX,
+      DCOS_SERVICE_SCHEME,
+      DCOS_SERVICE_WEB_PATH
+    } =
       this.getLabels() || {};
 
     const serviceName = encodeURIComponent(DCOS_SERVICE_NAME);
@@ -147,8 +152,11 @@ module.exports = class Framework extends Application {
       return null;
     }
 
-    if (isSDKService(this)) {
-      // we want to disable / webURL for SDK packages
+    if (isSDKService(this) && DCOS_SERVICE_WEB_PATH) {
+      // enable webURL for SDK packages providing DCOS_SERVICE_WEB_PATH label
+      return `${Config.rootUrl}/service/${serviceName}${DCOS_SERVICE_WEB_PATH}`;
+    } else if (isSDKService(this)) {
+      // disable webURL for SDK packages as default
       return null;
     }
 

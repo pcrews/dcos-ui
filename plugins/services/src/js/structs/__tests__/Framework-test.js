@@ -341,5 +341,30 @@ describe("Framework", function() {
       });
       expect(service.getWebURL()).toEqual(null);
     });
+
+    it("returns null if service is SDK Service", function() {
+      const service = new Framework({
+        labels: {
+          DCOS_SERVICE_NAME: "foo",
+          DCOS_SERVICE_PORT_INDEX: "80",
+          DCOS_SERVICE_SCHEME: "https",
+          DCOS_COMMONS_API_VERSION: "notnull"
+        }
+      });
+      expect(service.getWebURL()).toEqual(null);
+    });
+
+    it("returns url if service is SDK Service providing DCOS_SERVICE_WEB_PATH label", function() {
+      const service = new Framework({
+        labels: {
+          DCOS_SERVICE_NAME: "foo",
+          DCOS_SERVICE_PORT_INDEX: "80",
+          DCOS_SERVICE_SCHEME: "https",
+          DCOS_COMMONS_API_VERSION: "notnull",
+          DCOS_SERVICE_WEB_PATH: "/bar"
+        }
+      });
+      expect(service.getWebURL()).toEqual("/service/foo/bar");
+    });
   });
 });

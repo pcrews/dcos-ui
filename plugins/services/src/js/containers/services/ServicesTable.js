@@ -97,7 +97,7 @@ class ServicesTable extends React.Component {
     if (
       actionItem.id !== EDIT &&
       actionItem.id !== DELETE &&
-      (containsSDKService || isSDKService(service)) &&
+      containsSDKService &&
       !Hooks.applyFilter(
         "isEnabledSDKAction",
         actionItem.id === EDIT || actionItem.id === OPEN,
@@ -220,7 +220,6 @@ class ServicesTable extends React.Component {
   hasWebUI(service) {
     return (
       service instanceof Service &&
-      !isSDKService(service) &&
       service.getWebURL() != null &&
       service.getWebURL() !== ""
     );

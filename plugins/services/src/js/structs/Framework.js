@@ -1,3 +1,4 @@
+import Config from "#SRC/js/config/Config";
 import { cleanServiceJSON } from "#SRC/js/utils/CleanJSONUtil";
 import { isSDKService } from "#SRC/js/utils/ServiceUtil";
 
@@ -131,5 +132,26 @@ module.exports = class Framework extends Application {
       gpus: allocatedFrameworkResources.gpus + schedulerResources.gpus,
       disk: allocatedFrameworkResources.disk + schedulerResources.disk
     };
+  }
+
+  /**
+   * @override
+   */
+  getWebURL() {
+    const { DCOS_SERVICE_NAME, DCOS_SERVICE_PORT_INDEX, DCOS_SERVICE_SCHEME } =
+      this.getLabels() || {};
+
+    const serviceName = encodeURIComponent(DCOS_SERVICE_NAME);
+
+    if (!serviceName || !DCOS_SERVICE_PORT_INDEX || !DCOS_SERVICE_SCHEME) {
+      return null;
+    }
+
+    if (isSDKService(this)) {
+      // we want to disable / webURL for SDK packages
+      return null;
+    }
+
+    return `${Config.rootUrl}/service/${serviceName}/`;
   }
 };

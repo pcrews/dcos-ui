@@ -497,65 +497,6 @@ describe("Application", function() {
     });
   });
 
-  describe("#getWebURL", function() {
-    it("returns the url if the service label is present", function() {
-      const service = new Application({
-        labels: {
-          DCOS_SERVICE_NAME: "baz",
-          DCOS_SERVICE_PORT_INDEX: "80",
-          DCOS_SERVICE_SCHEME: "https"
-        }
-      });
-      expect(service.getWebURL()).toEqual("/service/baz/");
-    });
-
-    it("returns null if no labels are present", function() {
-      const service = new Application({ foo: "bar" });
-      expect(service.getWebURL()).toEqual(null);
-    });
-
-    it("returns null if not all labels are present", function() {
-      const service1 = new Application({
-        foo: "bar",
-        labels: {
-          DCOS_SERVICE_NAME: "baz",
-          DCOS_SERVICE_PORT_INDEX: "80"
-          // DCOS_SERVICE_SCHEME: 'https'
-        }
-      });
-      const service2 = new Application({
-        foo: "bar",
-        labels: {
-          DCOS_SERVICE_NAME: "baz",
-          // DCOS_SERVICE_PORT_INDEX: '80',
-          DCOS_SERVICE_SCHEME: "https"
-        }
-      });
-      const service3 = new Application({
-        foo: "bar",
-        labels: {
-          DCOS_SERVICE_NAME: "baz"
-          // DCOS_SERVICE_PORT_INDEX: '80',
-          // DCOS_SERVICE_SCHEME: 'https'
-        }
-      });
-      expect(service1.getWebURL()).toEqual(null);
-      expect(service2.getWebURL()).toEqual(null);
-      expect(service3.getWebURL()).toEqual(null);
-    });
-
-    it("returns null if the name is an empty string", function() {
-      const service = new Application({
-        labels: {
-          DCOS_SERVICE_NAME: "",
-          DCOS_SERVICE_PORT_INDEX: "80",
-          DCOS_SERVICE_SCHEME: "https"
-        }
-      });
-      expect(service.getWebURL()).toEqual(null);
-    });
-  });
-
   describe("#toJSON", function() {
     it("returns a object with the values in _itemData", function() {
       const item = new Application({ foo: "bar", baz: "qux" });

@@ -34,7 +34,7 @@ describe("Universe", function() {
     cy.visitUrl("services/overview");
 
     // Check that it appears in the service list
-    cy.get(".page-body-content table", {
+    cy.get(".page-body-content .service-table", {
       timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT
     })
       .contains(packageName, { timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT })
@@ -71,7 +71,7 @@ describe("Universe", function() {
     const packageName = "confluent-kafka";
     cy.visitUrl("services/overview");
 
-    cy.get(".page-body-content table", {
+    cy.get(".page-body-content .service-table", {
       timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT
     })
       .contains(packageName, { timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT })
@@ -98,7 +98,7 @@ describe("Universe", function() {
     cy.visitUrl("services/overview");
 
     // Check that it appears in the service list
-    cy.get(".page-body-content table", {
+    cy.get(".page-body-content .service-table", {
       timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT
     })
       .contains(packageName, { timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT })
@@ -144,11 +144,14 @@ describe("Universe", function() {
     // Click the Run Service button
     cy.contains("Run Service").click();
 
+    // Click the Open Service button
+    cy.contains("Open Service").click();
+
     // Go to the root services page
     cy.visitUrl("services/overview");
 
     // Check that it appears in the service list
-    cy.get(".page-body-content table", {
+    cy.get(".page-body-content .service-table", {
       timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT
     })
       .contains(packageName, { timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT })
@@ -192,7 +195,7 @@ describe("Universe", function() {
     cy.visitUrl("services/overview");
 
     // Check that it appears in the service list
-    cy.get(".page-body-content table", {
+    cy.get(".page-body-content .service-table", {
       timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT
     })
       .contains(serviceName, { timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT })
@@ -236,7 +239,7 @@ describe("Universe", function() {
     cy.visitUrl("services/overview");
 
     // Check that it appears in the service list
-    cy.get(".page-body-content table", {
+    cy.get(".page-body-content .service-table", {
       timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT
     })
       .contains(serviceName, { timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT })
@@ -250,8 +253,8 @@ describe("Universe", function() {
     cy.visitUrl("services/overview");
 
     // Click on the name of the package to delete
-    cy.get(".page-body-content table")
-      .getTableRowThatContains(serviceName)
+    cy.get(".page-body-content .service-table")
+      .contains(serviceName)
       .get("a.table-cell-link-primary")
       .contains(serviceName)
       .click();
@@ -271,7 +274,7 @@ describe("Universe", function() {
       .contains("Delete Service", { timeout: Timeouts.ANIMATION_TIMEOUT })
       .click();
 
-    cy.get(".page-body-content table", {
+    cy.get(".page-body-content .service-table", {
       timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT
     })
       .contains(serviceName, { timeout: Timeouts.SERVICE_DEPLOYMENT_TIMEOUT })

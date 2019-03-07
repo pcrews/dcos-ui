@@ -2,7 +2,7 @@ import Item from "#SRC/js/structs/Item";
 
 import HealthStatus from "../constants/HealthStatus";
 import ServiceImages from "../constants/ServiceImages";
-import ServiceStatus from "../constants/ServiceStatus";
+import * as ServiceStatus from "../constants/ServiceStatus";
 import ServiceSpec from "./ServiceSpec";
 import VolumeList from "./VolumeList";
 

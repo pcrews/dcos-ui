@@ -209,13 +209,13 @@ class JobModalForm extends React.Component<JobFormProps> {
                     </TabView>
                     <TabView id="run_config">
                       <ErrorsAlert
-                        errors={errors}
+                        errors={translatedErrors}
                         pathMapping={ServiceErrorPathMapping}
                         hideTopLevelErrors={!showAllErrors}
                       />
                       <RunConfigFormSection
                         formData={formOutput}
-                        errors={errors}
+                        errors={translatedErrors}
                         showErrors={showAllErrors}
                         onAddItem={this.handleAddItem}
                         onRemoveItem={this.handleRemoveItem}

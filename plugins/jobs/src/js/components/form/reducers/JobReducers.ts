@@ -2,7 +2,12 @@ import { deepCopy } from "#SRC/js/utils/Util";
 
 import { JobSpec, Action, JobFormActionType } from "../helpers/JobFormData";
 import { jsonReducers } from "./JsonReducers";
-import { artifacts, labels } from "./RunConfigReducers";
+import {
+  artifacts,
+  labels,
+  activeDeadlineSeconds,
+  restartPolicy
+} from "./RunConfigReducers";
 import { stringToBool } from "../Utils";
 import {
   cmdOnlyReducers,
@@ -61,7 +66,9 @@ const combinedReducers: CombinedReducers = {
   grantRuntimePrivileges: grantRuntimePrivilegesReducers,
   labels,
   artifacts,
-  args: argsReducers
+  args: argsReducers,
+  activeDeadlineSeconds,
+  restartPolicy
 };
 
 export function jobFormOutputToSpecReducer(

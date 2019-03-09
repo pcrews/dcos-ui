@@ -5,8 +5,7 @@ import {
   DockerParameter,
   FormOutput,
   JobOutput,
-  JobSpec,
-  RestartPolicy
+  JobSpec
 } from "./JobFormData";
 
 export function jobSpecToOutputParser(jobSpec: JobSpec): JobOutput {
@@ -66,12 +65,19 @@ export function jobSpecToOutputParser(jobSpec: JobSpec): JobOutput {
     }
 
     // RUN CONFIG
-    jobSpecCopy.job.run = (({ retryTime, restartJob, ...run }) => ({
-      ...run,
-      restart: restartJob
-        ? { policy: RestartPolicy.OnFailure, activeDeadlineSeconds: retryTime }
-        : undefined
-    }))(jobSpec.job.run);
+    const artifacts = findNestedPropertyInObject(
+      jobSpecCopy,
+      "job.run.artifacts"
+    );
+    if (artifacts && Array.isArray(artifacts)) {
+      jobSpecCopy.job.run.artifacts = artifacts.filter(
+        artifact =>
+          !(
+            !artifact.uri &&
+            !(artifact.extract || artifact.executable || artifact.cache)
+          )
+      );
+    }
 
     try {
       jobSpecCopy.job.labels = (jobSpec.job.labels || []).reduce<
@@ -128,8 +134,14 @@ export const jobSpecToFormOutputParser = (jobSpec: JobSpec): FormOutput => {
     maxLaunchDelay: run.maxLaunchDelay,
     killGracePeriod: run.taskKillGracePeriodSeconds,
     user: run.user,
-    restartJob: run.restartJob,
-    retryTime: run.retryTime,
+    restartPolicy: findNestedPropertyInObject(
+      jobSpec,
+      "job.run.restart.policy"
+    ),
+    retryTime: findNestedPropertyInObject(
+      jobSpec,
+      "job.run.restart.activeDeadlineSeconds"
+    ),
     labels: jobSpec.job.labels,
     artifacts: run.artifacts,
     args

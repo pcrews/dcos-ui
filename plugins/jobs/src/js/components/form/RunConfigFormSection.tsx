@@ -4,7 +4,6 @@ import { Trans } from "@lingui/macro";
 import AddButton from "#SRC/js/components/form/AddButton";
 import DeleteRowButton from "#SRC/js/components/form/DeleteRowButton";
 import FieldAutofocus from "#SRC/js/components/form/FieldAutofocus";
-//import FieldError from "#SRC/js/components/form/FieldError";
 import FieldHelp from "#SRC/js/components/form/FieldHelp";
 import FieldInput from "#SRC/js/components/form/FieldInput";
 import FieldLabel from "#SRC/js/components/form/FieldLabel";
@@ -15,7 +14,7 @@ import FormGroupHeadingContent from "#SRC/js/components/form/FormGroupHeadingCon
 import FormRow from "#SRC/js/components/form/FormRow";
 import Icon from "#SRC/js/components/Icon";
 import classNames from "classnames";
-import { FormOutput, FormError } from "./helpers/JobFormData";
+import { FormOutput, FormError, RestartPolicy } from "./helpers/JobFormData";
 import { Tooltip } from "reactjs-components";
 
 interface RunConfigSectionProps {
@@ -210,7 +209,7 @@ class RunConfigFormSection extends React.Component<RunConfigSectionProps> {
           {artifacts.map((artifact, i) => (
             <FormGroupContainer onRemove={onRemoveItem("artifacts", i)}>
               <FormRow>
-                <FormGroup className="column-6">
+                <FormGroup className="column-11">
                   <FieldAutofocus>
                     <FieldInput
                       name={`uri.${i}.artifacts`}
@@ -218,6 +217,38 @@ class RunConfigFormSection extends React.Component<RunConfigSectionProps> {
                       value={artifact.uri}
                     />
                   </FieldAutofocus>
+                </FormGroup>
+              </FormRow>
+              <FormRow>
+                <FormGroup className="column-auto">
+                  <FieldLabel matchInputHeight={true}>
+                    <FieldInput
+                      checked={artifact.executable}
+                      name={`executable.${i}.artifacts`}
+                      type="checkbox"
+                    />
+                    Executable
+                  </FieldLabel>
+                </FormGroup>
+                <FormGroup className="column-auto">
+                  <FieldLabel matchInputHeight={true}>
+                    <FieldInput
+                      checked={artifact.extract}
+                      name={`extract.${i}.artifacts`}
+                      type="checkbox"
+                    />
+                    Extract
+                  </FieldLabel>
+                </FormGroup>
+                <FormGroup className="column-auto">
+                  <FieldLabel matchInputHeight={true}>
+                    <FieldInput
+                      checked={artifact.cache}
+                      name={`cache.${i}.artifacts`}
+                      type="checkbox"
+                    />
+                    Cache
+                  </FieldLabel>
                 </FormGroup>
               </FormRow>
             </FormGroupContainer>
@@ -271,26 +302,19 @@ class RunConfigFormSection extends React.Component<RunConfigSectionProps> {
             </h3>
             <FieldLabel>
               <FieldInput
-                checked={
-                  !!formData.restartJob
-                  /* we need to provide a value different than undefined, so react knows that it shall handle the input.
-                 we don't want to set an initial value on restartJob, as it shall not appear in the JSON-config until
-                 it is explicitly changed. thus `!!formData.restartJob` */
-                }
-                data-parser="boolean"
-                name="job.run.restartJob"
+                checked={formData.restartPolicy === RestartPolicy.OnFailure}
+                name="restartPolicy"
                 type="radio"
-                value={true}
+                value={RestartPolicy.OnFailure}
               />
               <Trans render="span">Yes</Trans>
             </FieldLabel>
             <FieldLabel>
               <FieldInput
-                checked={!formData.restartJob}
-                data-parser="boolean"
-                name="job.run.restartJob"
+                checked={formData.restartPolicy !== RestartPolicy.OnFailure}
+                name="restartPolicy"
                 type="radio"
-                value={false}
+                value={RestartPolicy.Never}
               />
               <Trans render="span">No</Trans>
             </FieldLabel>
@@ -330,9 +354,8 @@ class RunConfigFormSection extends React.Component<RunConfigSectionProps> {
               </FieldLabel>
               <FieldInput
                 type="number"
-                name="job.run.retryTime"
+                name="activeDeadlineSeconds"
                 value={formData.retryTime}
-                disabled={!formData.restartJob}
               />
               <FieldHelp>
                 <Trans render="span">

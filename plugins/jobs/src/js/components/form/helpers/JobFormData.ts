@@ -1,8 +1,15 @@
-export interface JobFormData {
+export interface JobNoLabels {
   id: string;
   description?: string;
-  labels?: JobLabels;
   run: JobRun;
+}
+
+export interface JobFormData extends JobNoLabels {
+  labels?: ArrayLabels;
+}
+
+export interface JobOutputData extends JobNoLabels {
+  labels?: JobLabels;
 }
 
 export enum ConcurrentPolicy {
@@ -49,18 +56,29 @@ export interface FormOutput {
   maxLaunchDelay?: number;
   killGracePeriod?: number;
   user?: string;
-  restartJob?: boolean;
+  restartPolicy?: RestartPolicy;
   retryTime?: number;
-  labels?: JobLabels;
+  labels?: ArrayLabels;
   artifacts?: JobArtifact[];
 }
 
+export interface KeyValue {
+  key: string;
+  value: string;
+}
+
 export interface JobOutput {
-  job: JobFormData;
+  job: JobOutputData;
   schedule?: JobSchedule;
 }
 
-export type JobLabels = Array<[string, string]>;
+// Labels used internally to track form state
+export type ArrayLabels = Array<[string, string]>;
+
+// Labels in the form expected by the API
+export interface JobLabels {
+  [key: string]: string;
+}
 
 export interface JobRun {
   args?: string[];

@@ -177,6 +177,10 @@ class JobFormModal extends React.Component<
       jobCopy.run.ucr = getDefaultContainer();
     }
 
+    if (jobCopy.labels) {
+      jobCopy.labels = Object.entries(jobCopy.labels);
+    }
+
     const { schedules, _itemData, ...jobOnly } = jobCopy;
     const jobSpec = {
       cmdOnly,

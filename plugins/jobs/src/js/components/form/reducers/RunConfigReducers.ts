@@ -1,13 +1,15 @@
 import {
   JobSpec,
   JobFormActionType,
-  JobLabels,
-  JobArtifact
+  ArrayLabels,
+  JobArtifact,
+  RestartPolicy
 } from "../helpers/JobFormData";
+import { deepCopy, findNestedPropertyInObject } from "#SRC/js/utils/Util";
 
 const updateLabels = (
   state: JobSpec,
-  updateFn: (_: JobLabels) => JobLabels
+  updateFn: (_: ArrayLabels) => ArrayLabels
 ) => ({
   ...state,
   job: {
@@ -83,9 +85,52 @@ const artifacts = {
     [what, indexS]: string[]
   ) => {
     const index = parseInt(indexS, 10);
-    return updateArtifacts(state, artifact =>
-      artifact.map((v, i) => (i === index ? { ...v, [what]: value } : v))
-    );
+    const bools: { [key: string]: boolean } = {
+      executable: true,
+      extract: true,
+      cache: true
+    };
+    return updateArtifacts(state, artifact => {
+      return artifact.map((v, i) => {
+        let newValue: string | boolean = value;
+        if (bools[what]) {
+          newValue = Boolean(!v[what as keyof JobArtifact]);
+        }
+        return i === index ? { ...v, [what]: newValue } : v;
+      });
+    });
   }
 };
-export { artifacts, labels };
+
+const activeDeadlineSeconds = {
+  [JobFormActionType.SetNum]: (value: string, state: JobSpec) => {
+    const seconds = parseFloat(value);
+    const newValue = isNaN(seconds) ? undefined : seconds;
+    const stateCopy = deepCopy(state);
+    const restart = findNestedPropertyInObject(stateCopy, "job.run.restart");
+    if (!restart) {
+      stateCopy.job.run.restart = {
+        policy: RestartPolicy.Never
+      };
+    }
+    stateCopy.job.run.restart.activeDeadlineSeconds = newValue;
+    if (!stateCopy.job.run.restart.policy) {
+      stateCopy.job.run.restart.policy = RestartPolicy.Never;
+    }
+    return stateCopy;
+  }
+};
+
+const restartPolicy = {
+  [JobFormActionType.Set]: (value: string, state: JobSpec) => {
+    const stateCopy = deepCopy(state);
+    const restart = findNestedPropertyInObject(stateCopy, "job.run.restart");
+    if (!restart) {
+      stateCopy.job.run.restart = {};
+    }
+    stateCopy.job.run.restart.policy = value;
+    return stateCopy;
+  }
+};
+
+export { artifacts, labels, activeDeadlineSeconds, restartPolicy };

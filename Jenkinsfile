@@ -63,30 +63,30 @@ pipeline {
 
     stage("Tests") {
       parallel {
-        stage("Integration Test") {
-          environment {
-            REPORT_TO_DATADOG = master_branches.contains(BRANCH_NAME)
-          }
-          steps {
-            withCredentials([
-              string(credentialsId: '66c40969-a46d-470e-b8a2-6f04f2b3f2d5', variable: 'DATADOG_API_KEY'),
-              string(credentialsId: 'MpukWtJqTC3OUQ1aClsA', variable: 'DATADOG_APP_KEY'),
-            ]) {
-              sh "./scripts/ci/createDatadogConfig.sh"
-            }
-            sh "npm run integration-tests"
-          }
+      //  stage("Integration Test") {
+      //    environment {
+      //      REPORT_TO_DATADOG = master_branches.contains(BRANCH_NAME)
+      //    }
+      //    steps {
+      //      withCredentials([
+      //        string(credentialsId: '66c40969-a46d-470e-b8a2-6f04f2b3f2d5', variable: 'DATADOG_API_KEY'),
+      //        string(credentialsId: 'MpukWtJqTC3OUQ1aClsA', variable: 'DATADOG_APP_KEY'),
+      //      ]) {
+      //        sh "./scripts/ci/createDatadogConfig.sh"
+      //     }
+      //      sh "npm run integration-tests"
+      //    }
 
-          post {
-            always {
-              archiveArtifacts "cypress/**/*"
-              // We currently want flaky test runs be marked as success
-              // junit "cypress/results.xml"
-            }
-          }
-        }
+      //    post {
+      //      always {
+      //        archiveArtifacts "cypress/**/*"
+      //        // We currently want flaky test runs be marked as success
+      //        // junit "cypress/results.xml"
+      //      }
+      //    }
+      //  }
 
-        stage("System Test") {
+       stage("System Test") {
           steps {
             withCredentials([
               [
@@ -105,10 +105,10 @@ pipeline {
           post {
             always {
               archiveArtifacts "results/**/*"
-              junit "results/results.xml"
-            }
+             junit "results/results.xml"
+           }
           }
-        }
+        } 
       }
     }
 

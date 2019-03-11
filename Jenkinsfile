@@ -74,7 +74,8 @@ pipeline {
             ]) {
               sh "./scripts/ci/createDatadogConfig.sh"
             }
-            sh "npm run integration-tests"
+          //  sh "npm run integration-tests"
+          sh "echo 'noop'"
           }
 
           post {
@@ -104,8 +105,9 @@ pipeline {
 
           post {
             always {
-              archiveArtifacts "results/**/*"
-              junit "results/results.xml"
+              sh "echo 'DONE!'"
+              //archiveArtifacts "results/**/*"
+              //junit "results/results.xml"
             }
           }
         }
@@ -123,7 +125,7 @@ pipeline {
           usernamePassword(credentialsId: "6c147571-7145-410a-bf9c-4eec462fbe02", passwordVariable: "JIRA_PASS", usernameVariable: "JIRA_USER") // semantic-release-jira
         ]) {
           //sh "npx semantic-release"
-          sh "dummy op"
+          sh "echo 'dummy op'"
         }
       }
     }
@@ -142,7 +144,7 @@ pipeline {
           //sh "git clone https://github.com/mesosphere/dcos-commons.git ../dcos-commons"
           //sh "tar czf release.tar.gz dist"
           //sh "S3_BUCKET='dcos-ui-universe' S3_DIR_PATH='oss' S3_DIR_NAME='latest' ../dcos-commons/tools/build_package.sh 'dcos-ui' ./ -a ./release.tar.gz aws"
-          sh "dummy op"
+          sh "echo 'dummy op'"
         }
       }
     }
@@ -155,7 +157,7 @@ pipeline {
       }
       steps {
         //build job: "frontend/dcos-ui-ee-pipeline/" + env.BRANCH_NAME.replaceAll("/", "%2F"), wait: false
-        sh "dummy op"
+        sh "echo 'dummy op'"
       }
     }
   }

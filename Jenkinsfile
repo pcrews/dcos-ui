@@ -35,7 +35,7 @@ pipeline {
           usernamePassword(credentialsId: "a7ac7f84-64ea-4483-8e66-bb204484e58f", passwordVariable: "GIT_PASSWORD", usernameVariable: "GIT_USER")
         ]) {
           // Clone the repository again with a full git clone
-          sh "rm -rf {.*,*} || ls -la && git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/dcos/dcos-ui.git ."
+          sh "rm -rf {.*,*} || ls -la && git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/pcrews/dcos-ui.git ."
         }
         sh "git fetch"
         sh "git checkout \"\$([ -z \"\$CHANGE_BRANCH\" ] && echo \$BRANCH_NAME || echo \$CHANGE_BRANCH )\""
@@ -73,14 +73,20 @@ pipeline {
               //string(credentialsId: 'MpukWtJqTC3OUQ1aClsA', variable: 'DATADOG_APP_KEY'),
             ]) {
               sh "./scripts/ci/createDatadogConfig.sh"
-           }
+            }
             sh "npm run integration-tests"
           }
 
+          post {
+            always {
+              archiveArtifacts "cypress/**/*"
+              // We currently want flaky test runs be marked as success
+              // junit "cypress/results.xml"
+            }
           }
         }
 
-       stage("System Test") {
+        stage("System Test") {
           steps {
             withCredentials([
               [
@@ -91,15 +97,67 @@ pipeline {
               ]
             ]) {
               retry(3) {
-                //sh "dcos-system-test-driver -j1 -v ./system-tests/driver-config/jenkins.sh"
-                sh "dummy op"
-                sh "cat ./system-tests/driver-config/jenkins.sh"
-                sh "which dcos-system-test-driver"
+                sh "dcos-system-test-driver -j1 -v ./system-tests/driver-config/jenkins.sh"
               }
             }
           }
 
-        } 
+          post {
+            always {
+              archiveArtifacts "results/**/*"
+              junit "results/results.xml"
+            }
+          }
+        }
       }
+    }
+
+    stage("Semantic Release") {
+      steps {
+        withCredentials([
+          string(credentialsId: "d146870f-03b0-4f6a-ab70-1d09757a51fc", variable: "GH_TOKEN"), // semantic-release
+          string(credentialsId: "sentry_io_token", variable: "SENTRY_AUTH_TOKEN"), // upload-build
+          string(credentialsId: "3f0dbb48-de33-431f-b91c-2366d2f0e1cf",variable: "AWS_ACCESS_KEY_ID"), // upload-build
+          string(credentialsId: "f585ec9a-3c38-4f67-8bdb-79e5d4761937",variable: "AWS_SECRET_ACCESS_KEY"), // upload-build
+          usernamePassword(credentialsId: "a7ac7f84-64ea-4483-8e66-bb204484e58f", passwordVariable: "GIT_PASSWORD", usernameVariable: "GIT_USER"), // update-dcos-repo
+          usernamePassword(credentialsId: "6c147571-7145-410a-bf9c-4eec462fbe02", passwordVariable: "JIRA_PASS", usernameVariable: "JIRA_USER") // semantic-release-jira
+        ]) {
+          //sh "npx semantic-release"
+          sh "dummy op"
+        }
+      }
+    }
+
+    stage("Publish Universe") {
+      when {
+        expression {
+          master_branches.contains(BRANCH_NAME)
+        }
+      }
+      steps {
+        withCredentials([
+          string(credentialsId: "1ddc25d8-0873-4b6f-949a-ae803b074e7a", variable: "AWS_ACCESS_KEY_ID"),
+          string(credentialsId: "875cfce9-90ca-4174-8720-816b4cb7f10f", variable: "AWS_SECRET_ACCESS_KEY"),
+        ]) {
+          //sh "git clone https://github.com/mesosphere/dcos-commons.git ../dcos-commons"
+          //sh "tar czf release.tar.gz dist"
+          //sh "S3_BUCKET='dcos-ui-universe' S3_DIR_PATH='oss' S3_DIR_NAME='latest' ../dcos-commons/tools/build_package.sh 'dcos-ui' ./ -a ./release.tar.gz aws"
+          sh "dummy op"
+        }
+      }
+    }
+
+    stage("Run Enterprise Pipeline") {
+      when {
+        expression {
+          master_branches.contains(BRANCH_NAME)
+        }
+      }
+      steps {
+        //build job: "frontend/dcos-ui-ee-pipeline/" + env.BRANCH_NAME.replaceAll("/", "%2F"), wait: false
+        sh "dummy op"
+      }
+    }
   }
+
 }

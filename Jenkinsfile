@@ -75,8 +75,7 @@ pipeline {
               //sh "./scripts/ci/createDatadogConfig.sh"
               sh "echo 'dummy op'"
             }
-          //  sh "npm run integration-tests"
-          sh "echo 'noop'"
+            sh "npm run integration-tests"
           }
 
           post {
@@ -99,9 +98,6 @@ pipeline {
               ]
             ]) {
               retry(3) {
-                sh "cat ./system-tests/driver-config/jenkins.sh"
-                sh "which dcos-system-test-driver"
-                sh "dcos-system-test-driver --help"
                 sh "dcos-system-test-driver -j1 -v ./system-tests/driver-config/jenkins.sh"
               }
             }
@@ -110,6 +106,7 @@ pipeline {
           post {
             always {
               sh "echo 'DONE!'"
+              archiveArtifacts "./system-tests/driver-config/jenkins.sh"
               //archiveArtifacts "results/**/*"
               //junit "results/results.xml"
             }

@@ -72,7 +72,8 @@ pipeline {
               string(credentialsId: '66c40969-a46d-470e-b8a2-6f04f2b3f2d5', variable: 'DATADOG_API_KEY'),
               //string(credentialsId: 'MpukWtJqTC3OUQ1aClsA', variable: 'DATADOG_APP_KEY'),
             ]) {
-              sh "./scripts/ci/createDatadogConfig.sh"
+              //sh "./scripts/ci/createDatadogConfig.sh"
+              sh "echo 'dummy op'"
             }
           //  sh "npm run integration-tests"
           sh "echo 'noop'"

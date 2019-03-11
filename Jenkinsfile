@@ -13,7 +13,7 @@ pipeline {
 
   agent { 
     docker {
-    image 'frontend-dind-test'
+    image 'mesosphereci/frontend-dind-test'
     registryCredentialsId 'docker-hub-credentials'
     }
   }

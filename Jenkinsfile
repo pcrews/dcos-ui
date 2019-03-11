@@ -5,11 +5,13 @@
 def master_branches = ["master", ] as String[]
 
 pipeline {
-  agent {
+  /*agent {
     dockerfile {
       args  "--shm-size=1g"
     }
-  }
+  }*/
+
+  agent { label 'frontend-dind-test' }
 
   environment {
     JENKINS_VERSION = "yes"
@@ -98,8 +100,8 @@ pipeline {
 
           post {
             always {
-              sh "echo 'DONE!'"
-              archiveArtifacts "./system-tests/driver-config/jenkins.sh"
+              sh "echo 'System test post-action...'"
+              //archiveArtifacts "./system-tests/driver-config/jenkins.sh"
               //archiveArtifacts "results/**/*"
               //junit "results/results.xml"
             }

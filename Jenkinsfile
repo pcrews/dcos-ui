@@ -12,8 +12,10 @@ pipeline {
   }*/
 
   agent { 
-    docker 'frontend-dind-test'
+    docker {
+    image 'frontend-dind-test'
     registryCredentialsId 'docker-hub-credentials'
+    }
   }
 
   environment {

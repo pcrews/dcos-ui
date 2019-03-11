@@ -36,6 +36,10 @@ pipeline {
         withCredentials([
           usernamePassword(credentialsId: "a7ac7f84-64ea-4483-8e66-bb204484e58f", passwordVariable: "GIT_PASSWORD", usernameVariable: "GIT_USER")
         ]) {
+          // Clone and install system-test-driver
+          sh "git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com:mesosphere/dcos-system-test-driver.git
+          sh "ls -al"
+          sh "cd dcos-system-test-driver && python setup.py install
           // Clone the repository again with a full git clone
           sh "rm -rf {.*,*} || ls -la && git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/pcrews/dcos-ui.git ."
         }

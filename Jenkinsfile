@@ -11,7 +11,7 @@ pipeline {
     }
   }*/
 
-  agent { label 'frontend-dind-test' }
+  agent { docker 'frontend-dind-test' }
 
   environment {
     JENKINS_VERSION = "yes"

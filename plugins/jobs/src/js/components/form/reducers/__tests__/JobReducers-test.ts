@@ -68,6 +68,7 @@ describe("JobReducers", () => {
           job: {
             id: "newId",
             description: "desc",
+            labels: [],
             run: {
               cmd: "foo",
               cpus: 1,
@@ -111,6 +112,7 @@ describe("JobReducers", () => {
           job: {
             id: "newId",
             description: "desc",
+            labels: [],
             run: {
               cmd: "foo",
               cpus: 1,

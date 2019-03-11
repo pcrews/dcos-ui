@@ -79,26 +79,17 @@ const artifacts = {
       ...artifacts.slice(0, index),
       ...artifacts.slice(index + 1)
     ]),
-  [JobFormActionType.Set]: (
-    value: string,
-    state: JobSpec,
-    [what, indexS]: string[]
-  ) => {
+  [JobFormActionType.Set]: (value: string, state: JobSpec, path: string[]) => {
+    const [toUpdate, indexS] = path;
     const index = parseInt(indexS, 10);
-    const bools: { [key: string]: boolean } = {
-      executable: true,
-      extract: true,
-      cache: true
-    };
-    return updateArtifacts(state, artifact => {
-      return artifact.map((v, i) => {
-        let newValue: string | boolean = value;
-        if (bools[what]) {
-          newValue = Boolean(!v[what as keyof JobArtifact]);
-        }
-        return i === index ? { ...v, [what]: newValue } : v;
-      });
-    });
+    return updateArtifacts(state, artifacts =>
+      artifacts.map((a, i) => {
+        const newValue = ["executable", "extract", "cache"].includes(toUpdate)
+          ? !a[toUpdate as keyof JobArtifact]
+          : value;
+        return i === index ? { ...a, [toUpdate]: newValue } : a;
+      })
+    );
   }
 };
 

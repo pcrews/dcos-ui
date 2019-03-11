@@ -192,8 +192,8 @@ class RunConfigFormSection extends React.Component<RunConfigSectionProps> {
                 <Tooltip
                   content={
                     <Trans>
-                      "Provided URIs are passed to Mesos fetcher module and
-                      resolved in runtime"
+                      Provided URIs are passed to Mesos fetcher module and
+                      resolved in runtime
                     </Trans>
                   }
                   interactive={true}

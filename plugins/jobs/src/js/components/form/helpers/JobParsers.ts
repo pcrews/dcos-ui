@@ -65,24 +65,20 @@ export function jobSpecToOutputParser(jobSpec: JobSpec): JobOutput {
     }
 
     // RUN CONFIG
-    const artifacts = findNestedPropertyInObject(
-      jobSpecCopy,
-      "job.run.artifacts"
-    );
-    if (artifacts && Array.isArray(artifacts)) {
-      jobSpecCopy.job.run.artifacts = artifacts.filter(
-        artifact =>
-          !(
-            !artifact.uri &&
-            !(artifact.extract || artifact.executable || artifact.cache)
-          )
-      );
-    }
+    const { artifacts } = jobSpecCopy.job.run;
+    jobSpecCopy.job.run.artifacts = Array.isArray(artifacts)
+      ? artifacts.filter(_ => _.uri || _.extract || _.executable || _.cache)
+      : artifacts;
 
     try {
-      jobSpecCopy.job.labels = (jobSpec.job.labels || []).reduce<
-        Record<string, string>
-      >((acc, [k, v]) => ({ ...acc, [k]: v }), {});
+      const labels = (jobSpec.job.labels || []).reduce<Record<string, string>>(
+        (acc, [k, v]) => ({ ...acc, [k]: v }),
+        {}
+      );
+
+      // don't show labels in JSON-editor unless we actually have key-value-pairs
+      jobSpecCopy.job.labels =
+        Object.keys(labels).length > 0 ? labels : undefined;
     } catch {}
   }
 
@@ -134,14 +130,8 @@ export const jobSpecToFormOutputParser = (jobSpec: JobSpec): FormOutput => {
     maxLaunchDelay: run.maxLaunchDelay,
     killGracePeriod: run.taskKillGracePeriodSeconds,
     user: run.user,
-    restartPolicy: findNestedPropertyInObject(
-      jobSpec,
-      "job.run.restart.policy"
-    ),
-    retryTime: findNestedPropertyInObject(
-      jobSpec,
-      "job.run.restart.activeDeadlineSeconds"
-    ),
+    restartPolicy: findNestedPropertyInObject(run, "restart.policy"),
+    retryTime: findNestedPropertyInObject(run, "restart.activeDeadlineSeconds"),
     labels: jobSpec.job.labels,
     artifacts: run.artifacts,
     args

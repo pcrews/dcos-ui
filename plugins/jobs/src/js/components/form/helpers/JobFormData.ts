@@ -62,11 +62,6 @@ export interface FormOutput {
   artifacts?: JobArtifact[];
 }
 
-export interface KeyValue {
-  key: string;
-  value: string;
-}
-
 export interface JobOutput {
   job: JobOutputData;
   schedule?: JobSchedule;

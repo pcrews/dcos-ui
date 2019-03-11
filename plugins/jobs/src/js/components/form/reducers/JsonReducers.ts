@@ -39,7 +39,7 @@ export const jsonReducers = {
       return newState;
     }
 
-    valueCopy.job.labels = Object.entries(valueCopy.job.labels);
+    valueCopy.job.labels = Object.entries(valueCopy.job.labels || {});
     if (valueCopy.job.run.restart) {
       valueCopy.job.run.restartJob =
         valueCopy.job.run.restart.policy === RestartPolicy.OnFailure;

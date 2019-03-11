@@ -11,7 +11,10 @@ pipeline {
     }
   }*/
 
-  agent { docker 'frontend-dind-test' }
+  agent { 
+    docker 'frontend-dind-test'
+    registryCredentialsId 'docker-hub-credentials'
+  }
 
   environment {
     JENKINS_VERSION = "yes"

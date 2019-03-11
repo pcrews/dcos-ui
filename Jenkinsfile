@@ -98,6 +98,9 @@ pipeline {
               ]
             ]) {
               retry(3) {
+                sh "cat ./system-tests/driver-config/jenkins.sh"
+                sh "which dcos-system-test-driver"
+                sh "dcos-system-test-driver --help"
                 sh "dcos-system-test-driver -j1 -v ./system-tests/driver-config/jenkins.sh"
               }
             }

@@ -5,18 +5,18 @@
 def master_branches = ["master", ] as String[]
 
 pipeline {
-  /*agent {
+  agent {
     dockerfile {
       args  "--shm-size=1g"
     }
-  }*/
+  }
 
-  agent { 
+  /*agent { 
     docker {
     image 'mesosphereci/frontend-dind-test'
     registryCredentialsId 'docker-hub-credentials'
     }
-  }
+  }*/
 
   environment {
     JENKINS_VERSION = "yes"

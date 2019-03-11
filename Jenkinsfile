@@ -99,6 +99,8 @@ pipeline {
               retry(3) {
                 //sh "dcos-system-test-driver -j1 -v ./system-tests/driver-config/jenkins.sh"
                 sh "dummy op"
+                sh "cat ./system-tests/driver-config/jenkins.sh"
+                sh "which dcos-system-test-driver"
               }
             }
           }

@@ -101,7 +101,6 @@ pipeline {
 
         } 
       }
-    }
 
     stage("Semantic Release") {
       steps {

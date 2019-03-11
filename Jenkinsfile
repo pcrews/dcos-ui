@@ -39,7 +39,7 @@ pipeline {
           // Clone and install system-test-driver
           sh "git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com:mesosphere/dcos-system-test-driver.git"
           sh "ls -al"
-          sh "cd dcos-system-test-driver && python setup.py install
+          sh "cd dcos-system-test-driver && python setup.py install"
           // Clone the repository again with a full git clone
           sh "rm -rf {.*,*} || ls -la && git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/pcrews/dcos-ui.git ."
         }

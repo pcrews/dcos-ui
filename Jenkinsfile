@@ -103,7 +103,8 @@ pipeline {
             ]) {
               retry(3) {
                 sh "dcos-system-test-driver"
-                sh "cat
+                sh "ls -al"
+                sh "pwd"
                 sh "dcos-system-test-driver -j1 -v ./system-tests/driver-config/jenkins.sh"
               }
             }

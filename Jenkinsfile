@@ -41,14 +41,8 @@ pipeline {
         withCredentials([
           usernamePassword(credentialsId: "a7ac7f84-64ea-4483-8e66-bb204484e58f", passwordVariable: "GIT_PASSWORD", usernameVariable: "GIT_USER")
         ]) {
-          // Clone and install system-test-driver
-          sh "git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/mesosphere/dcos-system-test-driver.git"
-          sh "ls -al"
-          sh "pwd"
-          sh "cd dcos-system-test-driver && python setup.py install"
-          sh "dcos-system-test-driver --help"
           // Clone the repository again with a full git clone
-          sh "rm -rf {.*,*} || ls -la && git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/pcrews/dcos-ui.git ."
+          sh "rm -rf {.*,*} || ls -la && git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/dcos/dcos-ui.git ."
         }
         sh "git fetch"
         sh "git checkout \"\$([ -z \"\$CHANGE_BRANCH\" ] && echo \$BRANCH_NAME || echo \$CHANGE_BRANCH )\""

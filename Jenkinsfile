@@ -42,7 +42,7 @@ pipeline {
           usernamePassword(credentialsId: "a7ac7f84-64ea-4483-8e66-bb204484e58f", passwordVariable: "GIT_PASSWORD", usernameVariable: "GIT_USER")
         ]) {
           // Clone and install system-test-driver
-          sh "git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com:mesosphere/dcos-system-test-driver.git"
+          sh "git clone https://\$GIT_USER:\$GIT_PASSWORD@github.com/mesosphere/dcos-system-test-driver.git"
           sh "ls -al"
           sh "cd dcos-system-test-driver && python setup.py install"
           // Clone the repository again with a full git clone
@@ -102,6 +102,8 @@ pipeline {
               ]
             ]) {
               retry(3) {
+                sh "dcos-system-test-driver"
+                sh "cat
                 sh "dcos-system-test-driver -j1 -v ./system-tests/driver-config/jenkins.sh"
               }
             }
